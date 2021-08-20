@@ -2,10 +2,10 @@ QT +=core gui widgets opengl
 TEMPLATE = lib
 
 win32{
-DESTDIR = ../../dll_backup/win/q3dlib
+DESTDIR = ../../bin_win
 }
 unix{
-DESTDIR = ../../dll_backup/linux/q3dlib
+DESTDIR = ../../bin_linux
 }
 
 TARGET = q3d_gcl
