@@ -49,9 +49,6 @@ public:
     ~DataRebuild();
 
 public:
-    bool datachange(QString conda_env_name);
-    bool sample_enhancement(QString conda_env_name, int enhancement_factor);
-
     void loadPointClound(const QString &filename, int &w, int &h, std::vector<float> &points, std::vector<uchar> &colors);
     void testEvaluator();
     int testOnScreen();
