@@ -17,5 +17,5 @@ MainWindow::~MainWindow()
 
 void MainWindow::run_example()
 {
-    qDebug() << "test in!" << endl;
+    opengl_auto_obj_masker_.Create_Dataset(10, 1);
 }

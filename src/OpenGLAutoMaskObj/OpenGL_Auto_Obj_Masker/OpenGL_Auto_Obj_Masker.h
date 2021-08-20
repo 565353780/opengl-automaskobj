@@ -66,7 +66,7 @@ public:
     std::vector<std::vector<int>> getEasyMeshProjectRects(std::vector<EasyMesh *> mesh_list, Q3DScene *scene, GLint *viewport);
     QMesh3D *getNewMeshRect3D(QString mesh_name, QMaterial *material, Q3DScene *scene, QVector3D center, QVector3D eular, GLint *viewport);
     EasyMesh *getNewEasyMeshRect3D(QString mesh_name, QMaterial *material, Q3DScene *scene, QVector3D center, QVector3D eular, GLint *viewport, int label_idx);
-    void saveImgAndJson(QString output_name, QRenderWidget &w, std::vector<EasyMesh *> easymesh_list, Q3DScene *scene, GLint *viewport);
+    void saveImageAndLabel(QString output_name, QRenderWidget &w, std::vector<EasyMesh *> easymesh_list, Q3DScene *scene, GLint *viewport);
     bool Create_Dataset(int create_data_num, int max_obj_num_per_img);
 
 private:
@@ -75,5 +75,5 @@ private:
     static bool delDir(QString dirName);
 
 public:
-    int class_num;
+    int class_num_;
 };

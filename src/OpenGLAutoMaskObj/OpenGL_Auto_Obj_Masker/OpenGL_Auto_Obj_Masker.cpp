@@ -857,7 +857,7 @@ EasyMesh *OpenGL_Auto_Obj_Masker::getNewEasyMeshRect3D(QString mesh_name, QMater
     return mesh;
 }
 
-void OpenGL_Auto_Obj_Masker::saveImgAndJson(QString output_name, QRenderWidget &w, std::vector<EasyMesh *> easymesh_list, Q3DScene *scene, GLint *viewport)
+void OpenGL_Auto_Obj_Masker::saveImageAndLabel(QString output_name, QRenderWidget &w, std::vector<EasyMesh *> easymesh_list, Q3DScene *scene, GLint *viewport)
 {
     //抓取屏幕当前界面并保存
     QPixmap pixmap = w.grab();
@@ -947,12 +947,10 @@ void OpenGL_Auto_Obj_Masker::saveImgAndJson(QString output_name, QRenderWidget &
 
 bool OpenGL_Auto_Obj_Masker::Create_Dataset(int create_data_num, int max_obj_num_per_img)
 {
-    qDebug() << "start create dataset !" << endl;
+    qDebug() << "start create dataset !";
 
     //配置OpenGL
     setGLFormat();
-
-    //using namespace GCL;
 
     //创建主显示窗口
     QRenderWidget w;
@@ -966,8 +964,6 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(int create_data_num, int max_obj_num
     //创建Cube材质和纹理
     QMaterial *material = new QMaterial(scene);
     material->linkShaders(":/shaders/simple_vshader.glsl",":/shaders/simple_fshader.glsl");
-    QImage image1("cube.png");
-    material->addUniformTextureImage("texture",image1);
 
     //初始化相机位姿矩阵
     QMatrix4x4 matrix;
@@ -979,95 +975,63 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(int create_data_num, int max_obj_num
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
 
-    std::vector<EasyMesh *> easymesh_list;
-
-    QFileInfoList all_obj_file_list = GetFileList(QDir::currentPath() + "/../Server_DataBase/received_obj/darknet_obj");
-
-    class_num = 0;
-
-    std::vector<int> true_obj_file_list;
-
-    for(int i = 0; i < all_obj_file_list.size(); ++i)
+    QString source_dataset_path = "D:/3D_FRONT/output/";
+    QDir output_dataset_dir("D:/3D_FRONT/output_mask_dataset");
+    if(!output_dataset_dir.exists())
     {
-        if(all_obj_file_list[i].fileName().split(".")[1] == "obj")
-        {
-            ++class_num;
-            true_obj_file_list.emplace_back(i);
-        }
+        output_dataset_dir.mkpath(output_dataset_dir.absolutePath());
     }
 
-    qDebug() << "obj num : " << class_num << endl;
+    QDir dir;
+    dir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
+    dir.setPath(source_dataset_path);
 
-    QDir create_dataset_dir("../Server_DataBase/create_dataset/darknet_dataset");
+    QStringList model_class_folder_list = dir.entryList();
 
-    if(!create_dataset_dir.exists())
-    {
-        create_dataset_dir.mkpath(create_dataset_dir.absolutePath());
-    }
-
-    QDir train_dataset_dir("../Server_DataBase/train_dataset/darknet_dataset");
-
-    if(!train_dataset_dir.exists())
-    {
-        train_dataset_dir.mkpath(train_dataset_dir.absolutePath());
-    }
-
-    QFile file("../Server_DataBase/train_dataset/darknet_dataset/my_labels.txt");
-
-    if(file.open(QIODevice::WriteOnly))
-    {
-        file.resize(0);
-
-        QTextStream labels_out(&file);
-
-        for(int i = 0; i < class_num; ++i)
-        {
-            labels_out << all_obj_file_list[true_obj_file_list[i]].fileName().split(".")[0] << endl;
-            //file.write(((all_obj_file_list[i].fileName().split(".")[0] + "\n").toStdString()).c_str());
-        }
-
-        file.close();
-    }
-
-    int dataset_size = create_data_num;
-    int max_obj_num = max_obj_num_per_img;
-    int max_x = 6;
-    int max_y = 3;
-    int max_z = 10;
-
-    int total_obj_num = 0;
-
-    std::vector<int> max_obj_num_set;
-
-    max_obj_num_set.resize(dataset_size);
-
-    for(int i = 0; i < dataset_size; ++i)
-    {
-        max_obj_num_set[i] = qrand() % max_obj_num + 1;
-
-        total_obj_num += max_obj_num_set[i];
-    }
+    class_num_ = model_class_folder_list.size();
+    qDebug() << "model class num : " << class_num_;
 
     int solved_obj_num = 0;
 
-    for(int i = 0; i < dataset_size; ++i)
+    for(QString model_class_folder_name : model_class_folder_list)
     {
-        for(int j = 0; j < max_obj_num_set[i]; ++j)
+        QString model_class_folder_path = source_dataset_path + model_class_folder_name;
+
+        QFileInfoList model_file_list = GetFileList(model_class_folder_path);
+
+        std::vector<EasyMesh *> easymesh_list;
+
+        for(QFileInfo model_file : model_file_list)
         {
-            int current_obj_idx = qrand() % true_obj_file_list.size();
-            int current_x = qrand() % max_x - max_x / 2;
-            int current_y = qrand() % max_y - max_y / 2;
-            int current_z = qrand() % max_z + 1;
+            if(model_file.fileName().split(".")[1] == "obj")
+            {
+                //qrand()
+                float x = 0;
+                float y = 0;
+                float z = 0;
+                float roll = 0;
+                float pitch = 0;
+                float yaw = 0;
 
-            easymesh_list.emplace_back(getNewEasyMeshRect3D(all_obj_file_list[true_obj_file_list[current_obj_idx]].absoluteFilePath(), material, scene, QVector3D(current_x, current_y, current_z), QVector3D(qrand()%360,qrand()%360,qrand()%360), viewport, current_obj_idx));
+                qDebug() << "start getNewEasyMeshRect3D";
+                qDebug() << "index = " << solved_obj_num;
+                qDebug() << "model_file = " << model_file;
+                easymesh_list.emplace_back(getNewEasyMeshRect3D(
+                                               model_file.absoluteFilePath(),
+                                               material,
+                                               scene,
+                                               QVector3D(x, y, z),
+                                               QVector3D(roll, pitch, yaw),
+                                               viewport,
+                                               0));
 
-            qDebug() << solved_obj_num+1 << " / " << total_obj_num << endl;
-
-            ++solved_obj_num;
+                qDebug() << solved_obj_num+1 << " / " << model_file_list.size();
+                ++solved_obj_num;
+            }
         }
 
         //保存抓取图片和对应json文件
-        saveImgAndJson(create_dataset_dir.absolutePath() + "/" + QString::number(i), w, easymesh_list, scene, viewport);
+        saveImageAndLabel(output_dataset_dir.absolutePath() + "/" + QString::number(0), w, easymesh_list, scene, viewport);
 
         for(int j = 0; j < easymesh_list.size(); ++j)
         {
@@ -1075,7 +1039,24 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(int create_data_num, int max_obj_num
         }
 
         easymesh_list.resize(0);
+        exit(0);
     }
+
+//    QFile file("../Server_DataBase/train_dataset/darknet_dataset/my_labels.txt");
+
+//    if(file.open(QIODevice::WriteOnly))
+//    {
+//        file.resize(0);
+
+//        QTextStream labels_out(&file);
+
+//        for(int i = 0; i < class_num; ++i)
+//        {
+//            labels_out << all_obj_file_list[true_obj_file_list[i]].fileName().split(".")[0] << endl;
+//        }
+
+//        file.close();
+//    }
 
     //更新主窗口的显示
     w.show();
