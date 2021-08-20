@@ -45,9 +45,6 @@ public:
     ~OpenGL_Auto_Obj_Masker();
 
 public:
-    void loadPointClound(const QString &filename, int &w, int &h, std::vector<float> &points, std::vector<uchar> &colors);
-    void testEvaluator();
-    int testOnScreen();
     int testOffScreen(QString filename);
     void setGLFormat();
     std::vector<float> getRect3D(QMesh3D *mesh);

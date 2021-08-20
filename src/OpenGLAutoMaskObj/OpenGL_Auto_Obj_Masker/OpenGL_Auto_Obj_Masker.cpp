@@ -10,178 +10,6 @@ OpenGL_Auto_Obj_Masker::~OpenGL_Auto_Obj_Masker()
 
 }
 
-void OpenGL_Auto_Obj_Masker::loadPointClound(const QString &filename, int &w, int &h, std::vector<float> &points, std::vector<uchar> &colors)
-{
-    FILE *fp = fopen(filename.toLocal8Bit().data(), "rb");
-    fread(&w,sizeof(w),1,fp);
-    fread(&h,sizeof(h),1,fp);
-
-    points.resize(3 * w * h);
-    colors.resize(3 * w * h);
-    QVector3D center;
-    int count = 0;
-    for(int j=0; j < h; j++)
-    {
-        for(int i=0; i < w; i++)
-        {
-            float v[3];
-            int c[3];
-            fread(v,sizeof(float),3,fp);
-            fread(c,sizeof(int),3,fp);
-            if(v[2] > 0)
-            {
-                center += QVector3D(v[0],v[1],v[2]);
-                count++;
-            }
-            if(v[0]==0 && v[1] == 0 && v[2] == 0)
-            {
-                v[0] = -999999;
-                v[1] = -999999;
-                v[2] = -999999;
-            }
-            for(int k=0; k < 3; k++)
-            {
-                points[3 * (j * w + i) + k] = v[k];
-                colors[3 * (j * w + i) + k] = c[k];
-            }
-
-        }
-    }
-    fclose(fp);
-    center /= count;
-//    qDebug()<<center;
-}
-
-void OpenGL_Auto_Obj_Masker::testEvaluator()
-{
-    GCL::QShaderEvaluator evalator;
-
-//    evalator.setPackRange(256*256);
-    QImage testimg(1024,1024,QImage::Format_ARGB32);
-
-    double sum = 0.0;
-    srand(clock());
-    double sum1 = 0.0;
-    for(int i=0; i < testimg.width(); i++)
-    {
-        for(int j=0; j < testimg.height(); j++)
-        {
-            double val = rand() % 2048;
-            QVector4D vv = GCL::QMaterial::packInt(val);
-
-            vv *= 255;
-            testimg.setPixel(i,j,qRgba(vv.x(),vv.y(),vv.z(),vv.w()));
-
-            sum += val;
-            QRgb c0 = testimg.pixel(i,j);
-            QVector4D v1(qRed(c0),qGreen(c0),qBlue(c0),qAlpha(c0));
-            v1 /= 255.0;
-            sum1 +=(GCL::QMaterial::unpackInt(v1));// GCL::QMaterial::unpackInt( QVector4D(floor(vv.x()),floor(vv.y()),floor(vv.z()),floor(vv.w())) / 255.0);
-
-     //            if(val > sum) sum = val;
-        }
-    }
-
-    qDebug()<<int(sum)<<" "<<int(sum1)<<" "<<(sum - sum1)<<" "<<GCL::QMaterial::packInt(sum)*255.0;
-
-
-    QOpenGLTexture texture(testimg,QOpenGLTexture::DontGenerateMipMaps);
-    texture.setMinificationFilter(QOpenGLTexture::Nearest);
-    texture.setMagnificationFilter(QOpenGLTexture::Nearest);
-    texture.create();
-    GCL::QShaderEvaluator::Problem problem;
-    problem.texture_id_ = texture.textureId();
-    problem.w_ = testimg.width();
-    problem.h_ = testimg.height();
-    problem.val_type_ = GCL::QShaderEvaluator::VT_Pack;
-    problem.func_type_ = GCL::QShaderEvaluator::Func_Sum;
-    problem.valid_min_ = 60.0 / 255.0;
-    problem.valid_max_ = 1.0;
-    problem.map_size_ = GCL::QShaderEvaluator::Size_1024;
-    double val1 = evalator.evalTexture(problem);
-
-    double sumE = 0.0;
-    for(int i=0; i < testimg.width(); i++)
-    {
-        for(int j=0; j <testimg.height(); j++)
-        {
-            QRgb c0 = testimg.pixel(i,j);
-//            QRgb rgb = evalator.image_.pixel(i,j);
-
-            QVector4D vv(qRed(c0),qGreen(c0),qBlue(c0),qAlpha(c0));
-
-            vv /= 255.0;
-            double val = (GCL::QMaterial::unpackInt(vv));
-            sumE += val;
-        }
-    }
-    qDebug()<<int(val1)<<" "<<int(sumE);
-    qDebug()<<(val1 - sum)<<" "<<(val1 - sum) / (testimg.width() * testimg.height());
-}
-
-int OpenGL_Auto_Obj_Masker::testOnScreen()
-{
-    using namespace GCL;
-    GCL::QModelFinderWidget rw;
-
-//        testEvaluator();
-
-//        return 0;
-    rw.loadModel("c3.obj");
-
-    GCL::Q3DScene *scene = rw.getScene();
-
-    QMesh3D *mesh = scene->getMesh("findmodel");
-    if(mesh)
-    {
-            mesh->translate(QVector3D(26.4,30,856.576));
-            mesh->rotateEuler(QVector3D(90,0,0));
-    }
-//    QMesh3D *mesh = new QMesh3D(scene);
-//    mesh->loadFile("c1.obj",true);
-
-//    mesh->init();
-//    mesh->translate(QVector3D(26.4,30,856.576));
-//    mesh->rotate(90,QVector3D(1,0,0));
-
-
-    scene->lookat(QVector3D(0,0,1030.23),QVector3D(0,0,0),QVector3D(0,1,0));
-
-
-    QMatrix4x4 matrix;
-    matrix.lookAt(QVector3D(0,0,0),QVector3D(0,0,1),QVector3D(0,1,0));
-//    matrix.translate(-26.4,-1,-156.576);
-//    matrix.translate(-465.519,-88,-945.45);
-//    matrix.translate(-473.4,-82,0.);
-
-    matrix.translate(-613,-49,-216);
-    scene->setDefaultModelMatrix(matrix);
-    scene->setDefaultView();
-
-
-
-//  传入点云图
-    int w,h;
-    std::vector<float> points;
-    std::vector<uchar> colors;
-    w = 1280 * 0.5;
-    h = 1024 * 0.5;
-//    loadPointClound("3.pimg",w,h,points,colors);
-
-//    rw.setPointMap(w,h,points,colors);
-//    rw.loadPointMapPLY("2.ply",w,h,true);
-    rw.setBoundaryExtendLevel(14);
-    rw.setPartLeastSize(100);
-    rw.setDepthRange(758,600);
-    rw.loadPointMapPLY("0000.ply",w,h,true,800);
-    rw.setScoreThreshold(2.2);
-    rw.resize(w,h);
-
-    qDebug()<<w<<" "<<h;
-
-    return QApplication::exec();
-}
-
 int OpenGL_Auto_Obj_Masker::testOffScreen(QString filename)
 {
     using namespace GCL;
@@ -848,7 +676,9 @@ QMesh3D *OpenGL_Auto_Obj_Masker::getNewMeshRect3D(QString mesh_name, QMaterial *
 
 EasyMesh *OpenGL_Auto_Obj_Masker::getNewEasyMeshRect3D(QString mesh_name, QMaterial *material, Q3DScene *scene, QVector3D center, QVector3D eular, GLint *viewport, int label_idx)
 {
+    qDebug() << "getNewEasyMeshRect3D : start create mesh";
     EasyMesh *mesh = createEasyMesh(mesh_name, material, scene, label_idx);
+    qDebug() << "getNewEasyMeshRect3D : fnish create mesh";
 
     normalizeEasyMesh(mesh);
 
@@ -1024,22 +854,22 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(int create_data_num, int max_obj_num
                                                QVector3D(roll, pitch, yaw),
                                                viewport,
                                                0));
+                qDebug() << "finish getNewEasyMeshRect3D";
 
                 qDebug() << solved_obj_num+1 << " / " << model_file_list.size();
                 ++solved_obj_num;
             }
+
+            //保存抓取图片和对应json文件
+            saveImageAndLabel(output_dataset_dir.absolutePath() + "/" + QString::number(solved_obj_num), w, easymesh_list, scene, viewport);
+
+            for(int j = 0; j < easymesh_list.size(); ++j)
+            {
+                delete(easymesh_list[j]);
+            }
+
+            easymesh_list.resize(0);
         }
-
-        //保存抓取图片和对应json文件
-        saveImageAndLabel(output_dataset_dir.absolutePath() + "/" + QString::number(0), w, easymesh_list, scene, viewport);
-
-        for(int j = 0; j < easymesh_list.size(); ++j)
-        {
-            delete(easymesh_list[j]);
-        }
-
-        easymesh_list.resize(0);
-        exit(0);
     }
 
 //    QFile file("../Server_DataBase/train_dataset/darknet_dataset/my_labels.txt");
@@ -1061,8 +891,6 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(int create_data_num, int max_obj_num
     //更新主窗口的显示
     w.show();
 
-    return 1;
-
 //    testOnScreen();
 //    QDir dir("3waypipe");
 //    QStringList filters;
@@ -1073,7 +901,7 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(int create_data_num, int max_obj_num
 //    }
 
 
-    testOnScreen();
+//    testOnScreen();
 //    testOffScreen("0000.ply");
 
 //    using namespace GCL;
