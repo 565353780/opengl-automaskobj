@@ -1,0 +1,26 @@
+<RCC>
+    <qresource prefix="/shaders">
+        <file alias="array_fashder.glsl">shaders/array_fshader.glsl</file>
+        <file alias="array_vashder.glsl">shaders/array_vshader.glsl</file>
+        <file alias="evalator_fshader.glsl">shaders/evalator_fshader.glsl</file>
+        <file alias="evalator_vshader.glsl">shaders/evalator_vshader.glsl</file>
+        <file alias="findmodel_fshader.glsl">shaders/findmodel_fshader.glsl</file>
+        <file alias="findmodel_vshader.glsl">shaders/findmodel_vshader.glsl</file>
+        <file alias="pointmap_fshader.glsl">shaders/pointmap_fshader.glsl</file>
+        <file alias="pointmap_vshader.glsl">shaders/pointmap_vshader.glsl</file>
+        <file alias="scenemaker_fshader.glsl">shaders/scenemaker_fshader.glsl</file>
+        <file alias="scenemaker_vshader.glsl">shaders/scenemaker_vshader.glsl</file>
+        <file alias="simple_fshader.glsl">shaders/simple_fshader.glsl</file>
+        <file alias="simple_vshader.glsl">shaders/simple_vshader.glsl</file>
+    </qresource>
+    <qresource prefix="/"/>
+    <qresource prefix="/geometries">
+        <file alias="ball.obj">resources/geometries/ball.obj</file>
+        <file alias="cone.obj">resources/geometries/cone.obj</file>
+        <file alias="cylinder.obj">resources/geometries/cylinder.obj</file>
+        <file alias="box.obj">resources/geometries/box.obj</file>
+    </qresource>
+    <qresource prefix="/images">
+        <file alias="grid.png">resources/images/grid.png</file>
+    </qresource>
+</RCC>

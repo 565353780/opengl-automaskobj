@@ -22,6 +22,10 @@ SOURCES += \
 HEADERS += \
     mainwindow.h
 
+INCLUDEPATH += $$PWD/Q3D
+
+DEPENDPATH += $$PWD/Q3D
+
 FORMS += \
     mainwindow.ui
 
