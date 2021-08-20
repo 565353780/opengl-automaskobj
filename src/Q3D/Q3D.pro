@@ -2,10 +2,10 @@ QT +=core gui widgets opengl
 TEMPLATE = lib
 
 win32{
-DESTDIR = ../../bin_win
+DESTDIR = ../../bin_win/q3dlib
 }
 unix{
-DESTDIR = ../../bin_linux
+DESTDIR = ../../bin_linux/q3dlib
 }
 
 TARGET = q3d_gcl
@@ -65,14 +65,9 @@ SOURCES += \
     Widgets/QInputVector3Dialog.cpp \
     Widgets/QInputTransformDialog.cpp
 
-
 INCLUDEPATH += Core/ \
                $$PWD/../../thirdparty/  \
                $$PWD/../../thirdparty/trimesh2
-
-
-
-
 
 #win32: LIBS += -L$$PWD/../../tifflib/ -llibtiff
 

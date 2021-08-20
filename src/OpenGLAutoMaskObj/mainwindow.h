@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "OpenGL_Auto_Obj_Masker/OpenGL_Auto_Obj_Masker.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -15,7 +16,11 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void run_example();
+
 private:
     Ui::MainWindow *ui;
+
+    OpenGL_Auto_Obj_Masker opengl_auto_obj_masker_;
 };
 #endif // MAINWINDOW_H

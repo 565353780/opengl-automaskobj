@@ -13,21 +13,42 @@ CONFIG += c++17
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
+# OpenGL_Auto_Obj_Masker
 SOURCES += \
-    src/main.cpp \
-    src/mainwindow.cpp \
-    src/DataRebuild.cpp
+    OpenGL_Auto_Obj_Masker/OpenGL_Auto_Obj_Masker.cpp \
+    OpenGL_Auto_Obj_Masker/PointMapWidget.cpp \
+    OpenGL_Auto_Obj_Masker/easymesh.cpp
 
 HEADERS += \
-    include/mainwindow.h \
-    include/DataRebuild.h
+    OpenGL_Auto_Obj_Masker/OpenGL_Auto_Obj_Masker.h \
+    OpenGL_Auto_Obj_Masker/PointMapWidget.h \
+    OpenGL_Auto_Obj_Masker/easymesh.h
+
+SOURCES += \
+    main.cpp \
+    mainwindow.cpp
+
+HEADERS += \
+    mainwindow.h
 
 INCLUDEPATH += $$PWD/../Q3D
 
 DEPENDPATH += $$PWD/../Q3D
 
+win32{
+LIBS += \
+    -L$$PWD/../../bin_win/q3dlib/ \
+    -lq3d_gcl
+}
+
+unix{
+LIBS += \
+    -L$$PWD/../../bin_linux/q3dlib/ \
+    -lq3d_gcl
+}
+
 FORMS += \
-    forms/mainwindow.ui
+    mainwindow.ui
 
 TRANSLATIONS += \
     OpenGLAutoMaskObj_zh_CN.ts

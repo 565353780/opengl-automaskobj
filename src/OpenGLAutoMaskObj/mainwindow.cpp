@@ -6,6 +6,8 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    run_example();
 }
 
 MainWindow::~MainWindow()
@@ -13,3 +15,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::run_example()
+{
+    qDebug() << "test in!" << endl;
+}

@@ -1,16 +1,16 @@
-﻿#include "DataRebuild.h"
+﻿#include "OpenGL_Auto_Obj_Masker/OpenGL_Auto_Obj_Masker.h"
 
-DataRebuild::DataRebuild()
+OpenGL_Auto_Obj_Masker::OpenGL_Auto_Obj_Masker()
 {
 
 }
 
-DataRebuild::~DataRebuild()
+OpenGL_Auto_Obj_Masker::~OpenGL_Auto_Obj_Masker()
 {
 
 }
 
-void DataRebuild::loadPointClound(const QString &filename, int &w, int &h, std::vector<float> &points, std::vector<uchar> &colors)
+void OpenGL_Auto_Obj_Masker::loadPointClound(const QString &filename, int &w, int &h, std::vector<float> &points, std::vector<uchar> &colors)
 {
     FILE *fp = fopen(filename.toLocal8Bit().data(), "rb");
     fread(&w,sizeof(w),1,fp);
@@ -52,7 +52,7 @@ void DataRebuild::loadPointClound(const QString &filename, int &w, int &h, std::
 //    qDebug()<<center;
 }
 
-void DataRebuild::testEvaluator()
+void OpenGL_Auto_Obj_Masker::testEvaluator()
 {
     GCL::QShaderEvaluator evalator;
 
@@ -119,7 +119,7 @@ void DataRebuild::testEvaluator()
     qDebug()<<(val1 - sum)<<" "<<(val1 - sum) / (testimg.width() * testimg.height());
 }
 
-int DataRebuild::testOnScreen()
+int OpenGL_Auto_Obj_Masker::testOnScreen()
 {
     using namespace GCL;
     GCL::QModelFinderWidget rw;
@@ -182,7 +182,7 @@ int DataRebuild::testOnScreen()
     return QApplication::exec();
 }
 
-int DataRebuild::testOffScreen(QString filename)
+int OpenGL_Auto_Obj_Masker::testOffScreen(QString filename)
 {
     using namespace GCL;
     QOpenGLContext ctx;;
@@ -271,7 +271,7 @@ int DataRebuild::testOffScreen(QString filename)
 
 }
 
-void DataRebuild::setGLFormat()
+void OpenGL_Auto_Obj_Masker::setGLFormat()
 {
     QSurfaceFormat format;
     if(QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL)
@@ -291,7 +291,7 @@ void DataRebuild::setGLFormat()
 
 using namespace GCL;
 
-std::vector<float> DataRebuild::getRect3D(QMesh3D *mesh)
+std::vector<float> OpenGL_Auto_Obj_Masker::getRect3D(QMesh3D *mesh)
 {
     //计算mesh对应世界坐标系的变换矩阵
     QMatrix4x4 transform_matrix;
@@ -364,7 +364,7 @@ std::vector<float> DataRebuild::getRect3D(QMesh3D *mesh)
     return rect3d;
 }
 
-std::vector<float> DataRebuild::getEasyRect3D(EasyMesh *mesh)
+std::vector<float> OpenGL_Auto_Obj_Masker::getEasyRect3D(EasyMesh *mesh)
 {
     mesh->updateTransformMatrix();
 
@@ -423,7 +423,7 @@ std::vector<float> DataRebuild::getEasyRect3D(EasyMesh *mesh)
     return rect3d;
 }
 
-bool DataRebuild::normalizeMesh(QMesh3D *mesh)
+bool OpenGL_Auto_Obj_Masker::normalizeMesh(QMesh3D *mesh)
 {
     std::vector<float> rect3d = getRect3D(mesh);
 
@@ -459,7 +459,7 @@ bool DataRebuild::normalizeMesh(QMesh3D *mesh)
     return true;
 }
 
-bool DataRebuild::normalizeEasyMesh(EasyMesh *mesh)
+bool OpenGL_Auto_Obj_Masker::normalizeEasyMesh(EasyMesh *mesh)
 {
     std::vector<float> rect3d = getRect3D(mesh);
 
@@ -491,7 +491,7 @@ bool DataRebuild::normalizeEasyMesh(EasyMesh *mesh)
     return true;
 }
 
-std::vector<int> DataRebuild::createMesh(QMaterial *material, Q3DScene *scene, QVector3D center, QVector3D eular, GLint *viewport)
+std::vector<int> OpenGL_Auto_Obj_Masker::createMesh(QMaterial *material, Q3DScene *scene, QVector3D center, QVector3D eular, GLint *viewport)
 {
     //申请新的mesh结构
     QCubeMesh *mesh = new QCubeMesh(material, scene);
@@ -587,7 +587,7 @@ std::vector<int> DataRebuild::createMesh(QMaterial *material, Q3DScene *scene, Q
     return rect;
 }
 
-QMesh3D *DataRebuild::createMesh(QString mesh_name, QMaterial *material, Q3DScene *scene)
+QMesh3D *OpenGL_Auto_Obj_Masker::createMesh(QString mesh_name, QMaterial *material, Q3DScene *scene)
 {
     //申请新的mesh结构
     QMesh3D *mesh = new QMesh3D(material, scene);
@@ -601,7 +601,7 @@ QMesh3D *DataRebuild::createMesh(QString mesh_name, QMaterial *material, Q3DScen
     return mesh;
 }
 
-EasyMesh *DataRebuild::createEasyMesh(QString mesh_name, QMaterial *material, Q3DScene *scene, int label_idx)
+EasyMesh *OpenGL_Auto_Obj_Masker::createEasyMesh(QString mesh_name, QMaterial *material, Q3DScene *scene, int label_idx)
 {
     //申请新的mesh结构
     EasyMesh *mesh = new EasyMesh(material, scene);
@@ -617,7 +617,7 @@ EasyMesh *DataRebuild::createEasyMesh(QString mesh_name, QMaterial *material, Q3
     return mesh;
 }
 
-bool DataRebuild::transformMesh(QMesh3D *mesh, QVector3D center, QVector3D eular)
+bool OpenGL_Auto_Obj_Masker::transformMesh(QMesh3D *mesh, QVector3D center, QVector3D eular)
 {
     //mesh旋转
     mesh->rotateEuler(eular);
@@ -628,7 +628,7 @@ bool DataRebuild::transformMesh(QMesh3D *mesh, QVector3D center, QVector3D eular
     return true;
 }
 
-bool DataRebuild::transformEasyMesh(EasyMesh *mesh, QVector3D center, QVector3D eular)
+bool OpenGL_Auto_Obj_Masker::transformEasyMesh(EasyMesh *mesh, QVector3D center, QVector3D eular)
 {
     //mesh旋转
     mesh->rotateEuler(eular);
@@ -639,7 +639,7 @@ bool DataRebuild::transformEasyMesh(EasyMesh *mesh, QVector3D center, QVector3D 
     return true;
 }
 
-bool DataRebuild::setMeshpose(QMesh3D *mesh, QVector3D center, QVector3D eular)
+bool OpenGL_Auto_Obj_Masker::setMeshpose(QMesh3D *mesh, QVector3D center, QVector3D eular)
 {
     //mesh旋转
     mesh->setEuler(eular);
@@ -650,7 +650,7 @@ bool DataRebuild::setMeshpose(QMesh3D *mesh, QVector3D center, QVector3D eular)
     return true;
 }
 
-bool DataRebuild::setEasyMeshpose(EasyMesh *mesh, QVector3D center, QVector3D eular)
+bool OpenGL_Auto_Obj_Masker::setEasyMeshpose(EasyMesh *mesh, QVector3D center, QVector3D eular)
 {
     //mesh旋转
     mesh->setEuler(eular);
@@ -661,7 +661,7 @@ bool DataRebuild::setEasyMeshpose(EasyMesh *mesh, QVector3D center, QVector3D eu
     return true;
 }
 
-std::vector<int> DataRebuild::getMeshProjectRect(QMesh3D *mesh, Q3DScene *scene, GLint *viewport)
+std::vector<int> OpenGL_Auto_Obj_Masker::getMeshProjectRect(QMesh3D *mesh, Q3DScene *scene, GLint *viewport)
 {
     //设定标定rect初值
     int min_x = viewport[2] - 1;
@@ -751,7 +751,7 @@ std::vector<int> DataRebuild::getMeshProjectRect(QMesh3D *mesh, Q3DScene *scene,
     return rect;
 }
 
-std::vector<int> DataRebuild::getEasyMeshProjectRect(EasyMesh *mesh, Q3DScene *scene, GLint *viewport)
+std::vector<int> OpenGL_Auto_Obj_Masker::getEasyMeshProjectRect(EasyMesh *mesh, Q3DScene *scene, GLint *viewport)
 {
     //设定标定rect初值
     int min_x = viewport[2] - 1;
@@ -823,7 +823,7 @@ std::vector<int> DataRebuild::getEasyMeshProjectRect(EasyMesh *mesh, Q3DScene *s
     return rect;
 }
 
-std::vector<std::vector<int>> DataRebuild::getEasyMeshProjectRects(std::vector<EasyMesh *> mesh_list, Q3DScene *scene, GLint *viewport)
+std::vector<std::vector<int>> OpenGL_Auto_Obj_Masker::getEasyMeshProjectRects(std::vector<EasyMesh *> mesh_list, Q3DScene *scene, GLint *viewport)
 {
     std::vector<std::vector<int>> rect_list;
 
@@ -835,7 +835,7 @@ std::vector<std::vector<int>> DataRebuild::getEasyMeshProjectRects(std::vector<E
     return rect_list;
 }
 
-QMesh3D *DataRebuild::getNewMeshRect3D(QString mesh_name, QMaterial *material, Q3DScene *scene, QVector3D center, QVector3D eular, GLint *viewport)
+QMesh3D *OpenGL_Auto_Obj_Masker::getNewMeshRect3D(QString mesh_name, QMaterial *material, Q3DScene *scene, QVector3D center, QVector3D eular, GLint *viewport)
 {
     QMesh3D *mesh = createMesh(mesh_name, material, scene);
 
@@ -846,7 +846,7 @@ QMesh3D *DataRebuild::getNewMeshRect3D(QString mesh_name, QMaterial *material, Q
     return mesh;
 }
 
-EasyMesh *DataRebuild::getNewEasyMeshRect3D(QString mesh_name, QMaterial *material, Q3DScene *scene, QVector3D center, QVector3D eular, GLint *viewport, int label_idx)
+EasyMesh *OpenGL_Auto_Obj_Masker::getNewEasyMeshRect3D(QString mesh_name, QMaterial *material, Q3DScene *scene, QVector3D center, QVector3D eular, GLint *viewport, int label_idx)
 {
     EasyMesh *mesh = createEasyMesh(mesh_name, material, scene, label_idx);
 
@@ -857,7 +857,7 @@ EasyMesh *DataRebuild::getNewEasyMeshRect3D(QString mesh_name, QMaterial *materi
     return mesh;
 }
 
-void DataRebuild::saveImgAndJson(QString output_name, QRenderWidget &w, std::vector<EasyMesh *> easymesh_list, Q3DScene *scene, GLint *viewport)
+void OpenGL_Auto_Obj_Masker::saveImgAndJson(QString output_name, QRenderWidget &w, std::vector<EasyMesh *> easymesh_list, Q3DScene *scene, GLint *viewport)
 {
     //抓取屏幕当前界面并保存
     QPixmap pixmap = w.grab();
@@ -945,7 +945,7 @@ void DataRebuild::saveImgAndJson(QString output_name, QRenderWidget &w, std::vec
     outfile.close();
 }
 
-bool DataRebuild::Create_Dataset(int create_data_num, int max_obj_num_per_img)
+bool OpenGL_Auto_Obj_Masker::Create_Dataset(int create_data_num, int max_obj_num_per_img)
 {
     qDebug() << "start create dataset !" << endl;
 
@@ -981,7 +981,7 @@ bool DataRebuild::Create_Dataset(int create_data_num, int max_obj_num_per_img)
 
     std::vector<EasyMesh *> easymesh_list;
 
-    QFileInfoList all_obj_file_list = FilterSocket::Connection::GetFileList(QDir::currentPath() + "/../Server_DataBase/received_obj/darknet_obj");
+    QFileInfoList all_obj_file_list = GetFileList(QDir::currentPath() + "/../Server_DataBase/received_obj/darknet_obj");
 
     class_num = 0;
 
@@ -1148,5 +1148,67 @@ bool DataRebuild::Create_Dataset(int create_data_num, int max_obj_num_per_img)
 //    image.save("test.png");
 
     return 1;
+}
+
+QFileInfoList OpenGL_Auto_Obj_Masker::GetFileList(QString path)
+{
+    QDir dir(path);
+    QFileInfoList file_list = dir.entryInfoList(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
+    QFileInfoList folder_list = dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+
+    for(int i = 0; i != folder_list.size(); i++)
+    {
+         QString name = folder_list.at(i).absoluteFilePath();
+         QFileInfoList child_file_list = GetFileList(name);
+         file_list.append(child_file_list);
+    }
+
+    return file_list;
+}
+
+
+bool OpenGL_Auto_Obj_Masker::cpDir(QString srcPath, QString dstPath)
+{
+    QDir parentDstDir(QFileInfo(dstPath).path());
+
+    if(!parentDstDir.mkpath(QFileInfo(dstPath).fileName()))
+    {
+        return false;
+    }
+
+    QDir srcDir(srcPath);
+    foreach(QFileInfo info, srcDir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot))
+    {
+        QString srcItemPath = srcPath + "/" + info.fileName();
+        QString dstItemPath = dstPath + "/" + info.fileName();
+        if(info.isDir())
+        {
+            if(!cpDir(srcItemPath, dstItemPath))
+            {
+                return false;
+            }
+        }
+        else if(info.isFile())
+        {
+            if(!QFile::copy(srcItemPath, dstItemPath))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            qDebug() << "Unhandled item" << info.filePath() << "in cpDir";
+        }
+    }
+
+    return true;
+}
+
+bool OpenGL_Auto_Obj_Masker::delDir(QString dirPath){
+    QDir dir(dirPath);
+
+    dir.removeRecursively();
+
+    return true;
 }
 

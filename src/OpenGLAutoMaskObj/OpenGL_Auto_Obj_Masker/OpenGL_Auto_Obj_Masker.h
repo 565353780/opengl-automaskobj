@@ -1,20 +1,22 @@
 ﻿#include <iostream>
+#include <fstream>
+#include <ctime>
 #include <stdlib.h>
+
+#include <QApplication>
+#include <QWidget>
+#include <QtCore>
 #include <QString>
 #include <QDir>
 #include <QDebug>
-
-#include <QApplication>
-#include <QLabel>
-#include <QSurfaceFormat>
-
-#include <QOpenGLContext>
-#include <QOffscreenSurface>
-#include <QWidget>
-#include <QOpenGLFramebufferObject>
 #include <QImage>
-#include <ctime>
+#include <QLabel>
 #include <QFileInfo>
+#include <QSurfaceFormat>
+#include <QOpenGLContext>
+#include <QOpenGLBuffer>
+#include <QOpenGLFramebufferObject>
+#include <QOffscreenSurface>
 
 #ifdef WIN32
 #include <gl/GLU.h>
@@ -22,16 +24,25 @@
 #ifdef Linux
 #include <GL/glu.h>
 #endif
-#include <iostream>
-#include <QtCore>
-#include <fstream>
-#include <QOpenGLBuffer>
 
-class DataRebuild
+#include "../Q3D/Core/Q3DScene.h"
+#include "../Q3D/Meshes/QCubeMesh.h"
+#include "../Q3D/Core/QMaterial.h"
+#include "../Q3D/Widgets/QRenderWidget.h"
+#include "../Q3D/Meshes/QQuadMesh.h"
+#include "../Q3D/Meshes/QPointMapMesh.h"
+#include "../Q3D/Evaluator/QShaderEvaluator.h"
+#include "../Q3D/Widgets/QModelFinderWidget.h"
+#include "../Q3D/Finder/QPointMapModelFinder.h"
+
+#include "OpenGL_Auto_Obj_Masker/PointMapWidget.h"
+#include "OpenGL_Auto_Obj_Masker/easymesh.h"
+
+class OpenGL_Auto_Obj_Masker
 {
 public:
-    DataRebuild();
-    ~DataRebuild();
+    OpenGL_Auto_Obj_Masker();
+    ~OpenGL_Auto_Obj_Masker();
 
 public:
     void loadPointClound(const QString &filename, int &w, int &h, std::vector<float> &points, std::vector<uchar> &colors);
@@ -57,6 +68,11 @@ public:
     EasyMesh *getNewEasyMeshRect3D(QString mesh_name, QMaterial *material, Q3DScene *scene, QVector3D center, QVector3D eular, GLint *viewport, int label_idx);
     void saveImgAndJson(QString output_name, QRenderWidget &w, std::vector<EasyMesh *> easymesh_list, Q3DScene *scene, GLint *viewport);
     bool Create_Dataset(int create_data_num, int max_obj_num_per_img);
+
+private:
+    static QFileInfoList GetFileList(QString path);
+    static bool cpDir(QString srcPath, QString dstPath);
+    static bool delDir(QString dirName);
 
 public:
     int class_num;

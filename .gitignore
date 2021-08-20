@@ -1,0 +1,5 @@
+# compiled
+bin
+bin_win
+bin_linux
+build*
