@@ -432,22 +432,15 @@ QMesh3D *OpenGL_Auto_Obj_Masker::createMesh(QString mesh_name, QMaterial *materi
 EasyMesh *OpenGL_Auto_Obj_Masker::createEasyMesh(QString mesh_name, QMaterial *material, Q3DScene *scene, int label_idx)
 {
     //申请新的mesh结构
-    qDebug() << "createEasyMesh : start malloc EasyMesh";
     EasyMesh *mesh = new EasyMesh(material, scene);
-    qDebug() << "createEasyMesh : finish malloc EasyMesh";
 
     mesh->label_idx = label_idx;
 
-    qDebug() << "createEasyMesh : start loadFile to EasyMesh";
-    qDebug() << "current loaded mesh : " << mesh_name;
     //加载obj到mesh
     mesh->loadFile(mesh_name);
-    qDebug() << "createEasyMesh : finish loadFile to EasyMesh";
 
-    qDebug() << "createEasyMesh : start addModel to scene";
     //添加mesh到场景中
     scene->addModel(mesh);
-    qDebug() << "createEasyMesh : finish addModel to scene";
 
     return mesh;
 }
@@ -683,9 +676,7 @@ QMesh3D *OpenGL_Auto_Obj_Masker::getNewMeshRect3D(QString mesh_name, QMaterial *
 
 EasyMesh *OpenGL_Auto_Obj_Masker::getNewEasyMeshRect3D(QString mesh_name, QMaterial *material, Q3DScene *scene, QVector3D center, QVector3D eular, GLint *viewport, int label_idx)
 {
-    qDebug() << "getNewEasyMeshRect3D : start create mesh";
     EasyMesh *mesh = createEasyMesh(mesh_name, material, scene, label_idx);
-    qDebug() << "getNewEasyMeshRect3D : fnish create mesh";
 
     normalizeEasyMesh(mesh);
 
@@ -845,14 +836,11 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(int create_data_num, int max_obj_num
                 //qrand()
                 float x = 0;
                 float y = 0;
-                float z = 0;
+                float z = 2;
                 float roll = 0;
                 float pitch = 0;
                 float yaw = 0;
 
-                qDebug() << "start getNewEasyMeshRect3D";
-                qDebug() << "index = " << solved_obj_num;
-                qDebug() << "model_file = " << model_file;
                 easymesh_list.emplace_back(getNewEasyMeshRect3D(
                                                model_file.absoluteFilePath(),
                                                material,
@@ -861,10 +849,9 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(int create_data_num, int max_obj_num
                                                QVector3D(roll, pitch, yaw),
                                                viewport,
                                                0));
-                qDebug() << "finish getNewEasyMeshRect3D";
 
-                qDebug() << solved_obj_num+1 << " / " << model_file_list.size();
                 ++solved_obj_num;
+                qDebug() << solved_obj_num << " / " << model_file_list.size();
             }
 
             //保存抓取图片和对应json文件
@@ -875,7 +862,9 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(int create_data_num, int max_obj_num
                 delete(easymesh_list[j]);
             }
 
-            easymesh_list.resize(0);
+            easymesh_list.clear();
+
+            exit(0);
         }
     }
 
