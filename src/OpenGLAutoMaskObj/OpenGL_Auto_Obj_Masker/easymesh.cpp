@@ -59,8 +59,8 @@ void EasyMesh::loadObjFile(const QString &filename, std::vector<QMesh3D::VertexD
         {
             Vec3 pos;
             Vec4 color(0.0,0.0,0.0,0);
-            char* tok =strtok(pLine," ");
-            for(int i=0; i < 7; i++)
+            char* tok = strtok(pLine," ");
+            for(int i=0; i < 7; ++i)
             {
                 tok = strtok(NULL," ");
                 if(!tok) break;
@@ -81,7 +81,7 @@ void EasyMesh::loadObjFile(const QString &filename, std::vector<QMesh3D::VertexD
         {
             Vec2 tex;
             char* tok  = strtok(pLine," ");
-            for(int i=0; i < 2; i++)
+            for(int i=0; i < 2; ++i)
             {
                 tok = strtok(NULL," ");
                 tex[i] = (qreal)atof(tok);
@@ -90,14 +90,22 @@ void EasyMesh::loadObjFile(const QString &filename, std::vector<QMesh3D::VertexD
         }
         else if(pLine[0] == 'f' && pLine[1] == ' ')
         {
-          //  char* tok = strtok(pLine," ");
             Vec3i f;
             std::vector<std::string> flist;
             std::vector<int> fi_list;
             std::vector<int> fti_list;
             SplitString(pLine,flist," ");
+
             if(flist.size() < 4) continue;
-            for(int i=1; i < flist.size(); i++)
+
+            // take care that the end of line may has an space
+            // which could let the split result has an "\n" element
+            if(flist.back() == "\n")
+            {
+                flist.pop_back();
+            }
+
+            for(int i=1; i < flist.size(); ++i)
             {
                 std::vector<std::string> f_t;
                 SplitString(flist[i],f_t,"/");
@@ -109,7 +117,7 @@ void EasyMesh::loadObjFile(const QString &filename, std::vector<QMesh3D::VertexD
                     fti_list.push_back(f1);
                 }
             }
-            for(int i=1; i < fi_list.size()-1; i++)
+            for(int i=1; i < fi_list.size()-1; ++i)
             {
                 Vec3i f;
                 f[0] = fi_list[i];

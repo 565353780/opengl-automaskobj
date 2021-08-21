@@ -432,15 +432,22 @@ QMesh3D *OpenGL_Auto_Obj_Masker::createMesh(QString mesh_name, QMaterial *materi
 EasyMesh *OpenGL_Auto_Obj_Masker::createEasyMesh(QString mesh_name, QMaterial *material, Q3DScene *scene, int label_idx)
 {
     //申请新的mesh结构
+    qDebug() << "createEasyMesh : start malloc EasyMesh";
     EasyMesh *mesh = new EasyMesh(material, scene);
+    qDebug() << "createEasyMesh : finish malloc EasyMesh";
 
     mesh->label_idx = label_idx;
 
+    qDebug() << "createEasyMesh : start loadFile to EasyMesh";
+    qDebug() << "current loaded mesh : " << mesh_name;
     //加载obj到mesh
     mesh->loadFile(mesh_name);
+    qDebug() << "createEasyMesh : finish loadFile to EasyMesh";
 
+    qDebug() << "createEasyMesh : start addModel to scene";
     //添加mesh到场景中
     scene->addModel(mesh);
+    qDebug() << "createEasyMesh : finish addModel to scene";
 
     return mesh;
 }
