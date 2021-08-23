@@ -3,3 +3,5 @@ bin
 bin_win
 bin_linux
 build*
+Makefile
+.qmake.stash
