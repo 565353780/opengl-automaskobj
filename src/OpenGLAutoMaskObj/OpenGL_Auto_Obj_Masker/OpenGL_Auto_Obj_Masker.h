@@ -38,6 +38,8 @@
 #include "OpenGL_Auto_Obj_Masker/PointMapWidget.h"
 #include "OpenGL_Auto_Obj_Masker/easymesh.h"
 
+using namespace GCL;
+
 class OpenGL_Auto_Obj_Masker
 {
 public:
@@ -47,33 +49,52 @@ public:
 public:
     int testOffScreen(QString filename);
 
-    void setGLFormat();
+    bool initEnv();
 
-    std::vector<float> getEasyRect3D(EasyMesh *mesh);
+    bool addNormalizedMesh(QString &mesh_file_path, QVector3D &center, QVector3D &eular, int &label_idx);
 
-    bool normalizeEasyMesh(EasyMesh *mesh);
+    bool clearMesh();
 
-    std::vector<int> createMesh(QMaterial *material, Q3DScene *scene, QVector3D center, QVector3D eular, GLint *viewport);
+    bool getMeshRect3D(EasyMesh *mesh, std::vector<float> &rect_3d);
 
-    EasyMesh *createEasyMesh(QString mesh_name, QMaterial *material, Q3DScene *scene, int label_idx);
+    bool setMeshPose(EasyMesh *mesh, QVector3D &center, QVector3D &eular);
 
-    bool transformEasyMesh(EasyMesh *mesh, QVector3D center, QVector3D eular);
+    bool getMeshProjectPolygon(EasyMesh *mesh, std::vector<int> &polygon);
 
-    bool setEasyMeshpose(EasyMesh *mesh, QVector3D center, QVector3D eular);
+    bool getMeshProjectRects(std::vector<std::vector<int>> &project_rect_vec);
 
-    std::vector<int> getEasyMeshProjectRect(EasyMesh *mesh, Q3DScene *scene, GLint *viewport);
-    std::vector<std::vector<int>> getEasyMeshProjectRects(std::vector<EasyMesh *> mesh_list, Q3DScene *scene, GLint *viewport);
+    void saveImageAndLabel(QString &output_name);
 
-    EasyMesh *getNewEasyMeshRect3D(QString mesh_name, QMaterial *material, Q3DScene *scene, QVector3D center, QVector3D eular, GLint *viewport, int label_idx);
-
-    void saveImageAndLabel(QString output_name, QRenderWidget &w, std::vector<EasyMesh *> easymesh_list, Q3DScene *scene, GLint *viewport);
-    bool Create_Dataset(int create_data_num, int max_obj_num_per_img);
+    bool Create_Dataset();
 
 private:
+    void setGLFormat();
+
+    bool Point3DToPoint2D(QMatrix4x4 &transform_matrix, QVector3D &point_3d, std::vector<int> &point_2d);
+
+    bool normalizeMesh(EasyMesh *mesh);
+
+    bool transformMesh(EasyMesh *mesh, QVector3D &center, QVector3D &eular);
+
+    EasyMesh *createMesh(QString &mesh_name, int &label_idx);
+
+    EasyMesh *createNormalizedMeshWithPose(QString &mesh_name, QVector3D &center, QVector3D &eular, int &label_idx);
+
+    bool getMeshProjectRect(EasyMesh *mesh, std::vector<int> &project_rect);
+
     static QFileInfoList GetFileList(QString path);
+
     static bool cpDir(QString srcPath, QString dstPath);
     static bool delDir(QString dirName);
 
 public:
     int class_num_;
+
+private:
+    QRenderWidget w_;
+    Q3DScene *scene_;
+    QMaterial *material_;
+    GLint viewport_[4];
+
+    std::vector<EasyMesh *> mesh_list_;
 };
