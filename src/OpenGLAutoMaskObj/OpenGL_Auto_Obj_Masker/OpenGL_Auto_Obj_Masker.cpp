@@ -94,9 +94,6 @@ int OpenGL_Auto_Obj_Masker::testOffScreen(QString filename)
 //    return QApplication::exec();
 
     return 0;
-
-
-
 }
 
 void OpenGL_Auto_Obj_Masker::setGLFormat()
@@ -118,79 +115,6 @@ void OpenGL_Auto_Obj_Masker::setGLFormat()
 }
 
 using namespace GCL;
-
-std::vector<float> OpenGL_Auto_Obj_Masker::getRect3D(QMesh3D *mesh)
-{
-    //计算mesh对应世界坐标系的变换矩阵
-    QMatrix4x4 transform_matrix;
-    transform_matrix.setToIdentity();
-    transform_matrix.translate(mesh->getOffset());
-
-    QVector3D get_eular = mesh->getEuler();
-    transform_matrix.rotate(get_eular[0],QVector3D(1,0,0));
-    transform_matrix.rotate(get_eular[1],QVector3D(0,1,0));
-    transform_matrix.rotate(get_eular[2],QVector3D(0,0,1));
-
-    //获取mesh的所有点集
-    std::vector<QVector3D> mesh_points;
-
-    QOpenGLBuffer *vertice_array = mesh->getVerticeArray();
-
-    QMesh3D::VertexData *vertice_data = (QMesh3D::VertexData *)vertice_array->map(QOpenGLBuffer::ReadOnly);
-
-    for(int i = 0; i < mesh->getVerticeSize(); ++i)
-    {
-        mesh_points.emplace_back(transform_matrix.map(vertice_data[i].position_));
-    }
-
-    vertice_array->unmap();
-
-    float x_min = mesh_points[0].x();
-    float x_max = x_min;
-    float y_min = mesh_points[0].y();
-    float y_max = y_min;
-    float z_min = mesh_points[0].z();
-    float z_max = z_min;
-
-    for(int i = 1; i < mesh->getVerticeSize(); ++i)
-    {
-        if(mesh_points[i].x() < x_min)
-        {
-            x_min = mesh_points[i].x();
-        }
-        if(mesh_points[i].x() > x_max)
-        {
-            x_max = mesh_points[i].x();
-        }
-        if(mesh_points[i].y() < y_min)
-        {
-            y_min = mesh_points[i].y();
-        }
-        if(mesh_points[i].y() > y_max)
-        {
-            y_max = mesh_points[i].y();
-        }
-        if(mesh_points[i].z() < z_min)
-        {
-            z_min = mesh_points[i].z();
-        }
-        if(mesh_points[i].z() > z_max)
-        {
-            z_max = mesh_points[i].z();
-        }
-    }
-
-    std::vector<float> rect3d;
-
-    rect3d.emplace_back(x_min);
-    rect3d.emplace_back(y_min);
-    rect3d.emplace_back(z_min);
-    rect3d.emplace_back(x_max);
-    rect3d.emplace_back(y_max);
-    rect3d.emplace_back(z_max);
-
-    return rect3d;
-}
 
 std::vector<float> OpenGL_Auto_Obj_Masker::getEasyRect3D(EasyMesh *mesh)
 {
@@ -251,45 +175,9 @@ std::vector<float> OpenGL_Auto_Obj_Masker::getEasyRect3D(EasyMesh *mesh)
     return rect3d;
 }
 
-bool OpenGL_Auto_Obj_Masker::normalizeMesh(QMesh3D *mesh)
-{
-    std::vector<float> rect3d = getRect3D(mesh);
-
-    //mesh归一化到单位立方体中
-    float center_x = (rect3d[0] + rect3d[3]) / 2;
-    float center_y = (rect3d[1] + rect3d[4]) / 2;
-    float center_z = (rect3d[2] + rect3d[5]) / 2;
-
-    float max_length = rect3d[3] - rect3d[0];
-
-    if(rect3d[4] - rect3d[1] > max_length)
-    {
-        max_length = rect3d[4] - rect3d[1];
-    }
-    if(rect3d[5] - rect3d[2] > max_length)
-    {
-        max_length = rect3d[5] - rect3d[2];
-    }
-
-    QOpenGLBuffer *vertice_array = mesh->getVerticeArray();
-
-    QMesh3D::VertexData *vertice_data = (QMesh3D::VertexData *)vertice_array->map(QOpenGLBuffer::ReadWrite);
-
-    for(int i = 0; i < mesh->getVerticeSize(); ++i)
-    {
-        vertice_data[i].position_.setX((vertice_data[i].position_.x() - center_x) / max_length);
-        vertice_data[i].position_.setY((vertice_data[i].position_.y() - center_y) / max_length);
-        vertice_data[i].position_.setZ((vertice_data[i].position_.z() - center_z) / max_length);
-    }
-
-    vertice_array->unmap();
-
-    return true;
-}
-
 bool OpenGL_Auto_Obj_Masker::normalizeEasyMesh(EasyMesh *mesh)
 {
-    std::vector<float> rect3d = getRect3D(mesh);
+    std::vector<float> rect3d = getEasyRect3D(mesh);
 
     //mesh归一化到单位立方体中
     float center_x = (rect3d[0] + rect3d[3]) / 2;
@@ -415,20 +303,6 @@ std::vector<int> OpenGL_Auto_Obj_Masker::createMesh(QMaterial *material, Q3DScen
     return rect;
 }
 
-QMesh3D *OpenGL_Auto_Obj_Masker::createMesh(QString mesh_name, QMaterial *material, Q3DScene *scene)
-{
-    //申请新的mesh结构
-    QMesh3D *mesh = new QMesh3D(material, scene);
-
-    //加载obj到mesh
-    mesh->loadFile(mesh_name);
-
-    //添加mesh到场景中
-    scene->addModel(mesh);
-
-    return mesh;
-}
-
 EasyMesh *OpenGL_Auto_Obj_Masker::createEasyMesh(QString mesh_name, QMaterial *material, Q3DScene *scene, int label_idx)
 {
     //申请新的mesh结构
@@ -445,17 +319,6 @@ EasyMesh *OpenGL_Auto_Obj_Masker::createEasyMesh(QString mesh_name, QMaterial *m
     return mesh;
 }
 
-bool OpenGL_Auto_Obj_Masker::transformMesh(QMesh3D *mesh, QVector3D center, QVector3D eular)
-{
-    //mesh旋转
-    mesh->rotateEuler(eular);
-
-    //mesh平移
-    mesh->translate(center);
-
-    return true;
-}
-
 bool OpenGL_Auto_Obj_Masker::transformEasyMesh(EasyMesh *mesh, QVector3D center, QVector3D eular)
 {
     //mesh旋转
@@ -463,17 +326,6 @@ bool OpenGL_Auto_Obj_Masker::transformEasyMesh(EasyMesh *mesh, QVector3D center,
 
     //mesh平移
     mesh->translate(center);
-
-    return true;
-}
-
-bool OpenGL_Auto_Obj_Masker::setMeshpose(QMesh3D *mesh, QVector3D center, QVector3D eular)
-{
-    //mesh旋转
-    mesh->setEuler(eular);
-
-    //mesh平移
-    mesh->setOffset(center);
 
     return true;
 }
@@ -487,96 +339,6 @@ bool OpenGL_Auto_Obj_Masker::setEasyMeshpose(EasyMesh *mesh, QVector3D center, Q
     mesh->setOffset(center);
 
     return true;
-}
-
-std::vector<int> OpenGL_Auto_Obj_Masker::getMeshProjectRect(QMesh3D *mesh, Q3DScene *scene, GLint *viewport)
-{
-    //设定标定rect初值
-    int min_x = viewport[2] - 1;
-    int max_x = 0;
-    int min_y = viewport[3] - 1;
-    int max_y = 0;
-
-    //计算mesh对应世界坐标系的变换矩阵
-    QMatrix4x4 transform_matrix;
-    transform_matrix.setToIdentity();
-    transform_matrix.translate(mesh->getOffset());
-
-    QVector3D get_eular = mesh->getEuler();
-    transform_matrix.rotate(get_eular[0],QVector3D(1,0,0));
-    transform_matrix.rotate(get_eular[1],QVector3D(0,1,0));
-    transform_matrix.rotate(get_eular[2],QVector3D(0,0,1));
-
-    std::cout << mesh->getVerticeSize() << std::endl;
-    std::cout << mesh->getOffset().x() << "," << mesh->getOffset().y() << "," << mesh->getOffset().z() << std::endl;
-    std::cout << get_eular[0] << "," << get_eular[1] << "," << get_eular[2] << std::endl << std::endl;
-
-    //获取mesh的所有点集
-    std::vector<QVector3D> mesh_points;
-
-    QOpenGLBuffer *vertice_array = mesh->getVerticeArray();
-
-    QMesh3D::VertexData *vertice_data = (QMesh3D::VertexData *)vertice_array->map(QOpenGLBuffer::ReadOnly);
-
-    for(int i = 0; i < mesh->getVerticeSize(); ++i)
-    {
-        mesh_points.emplace_back(transform_matrix.map(vertice_data[i].position_));
-    }
-
-    vertice_array->unmap();
-
-    //逐个计算投影点并更新rect
-    for(int i = 0; i < mesh_points.size(); ++i)
-    {
-        QVector3D win_pos = scene->project(mesh_points[i]);
-
-        int win_x = viewport[0] + (win_pos[0] + 1) * viewport[2] / 2;
-        int win_y = viewport[1] + (win_pos[1] + 1) * viewport[3] / 2;
-
-        if(win_x < min_x)
-        {
-            min_x = win_x;
-        }
-        if(win_x > max_x)
-        {
-            max_x = win_x;
-        }
-        if(win_y < min_y)
-        {
-            min_y = win_y;
-        }
-        if(win_y > max_y)
-        {
-            max_y = win_y;
-        }
-    }
-
-    //提高rect鲁棒性
-    if(min_x < 0)
-    {
-        min_x = 0;
-    }
-    if(max_x >= viewport[2])
-    {
-        max_x = viewport[2] - 1;
-    }
-    if(min_y < 0)
-    {
-        min_y = 0;
-    }
-    if(max_y >= viewport[3])
-    {
-        max_y = viewport[3] - 1;
-    }
-
-    //存储rect为vector
-    std::vector<int> rect;
-    rect.emplace_back(min_x);
-    rect.emplace_back(min_y);
-    rect.emplace_back(max_x);
-    rect.emplace_back(max_y);
-
-    return rect;
 }
 
 std::vector<int> OpenGL_Auto_Obj_Masker::getEasyMeshProjectRect(EasyMesh *mesh, Q3DScene *scene, GLint *viewport)
@@ -661,17 +423,6 @@ std::vector<std::vector<int>> OpenGL_Auto_Obj_Masker::getEasyMeshProjectRects(st
     }
 
     return rect_list;
-}
-
-QMesh3D *OpenGL_Auto_Obj_Masker::getNewMeshRect3D(QString mesh_name, QMaterial *material, Q3DScene *scene, QVector3D center, QVector3D eular, GLint *viewport)
-{
-    QMesh3D *mesh = createMesh(mesh_name, material, scene);
-
-    normalizeMesh(mesh);
-
-    transformMesh(mesh, center, eular);
-
-    return mesh;
 }
 
 EasyMesh *OpenGL_Auto_Obj_Masker::getNewEasyMeshRect3D(QString mesh_name, QMaterial *material, Q3DScene *scene, QVector3D center, QVector3D eular, GLint *viewport, int label_idx)
@@ -803,8 +554,8 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(int create_data_num, int max_obj_num
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
 
-    QString source_dataset_path = "D:/3D_FRONT/output/";
-    QDir output_dataset_dir("D:/3D_FRONT/output_mask_dataset");
+    QString source_dataset_path = "/home/chli/3D_FRONT/output/";
+    QDir output_dataset_dir("/home/chli/3D_FRONT/output_mask_dataset");
     if(!output_dataset_dir.exists())
     {
         output_dataset_dir.mkpath(output_dataset_dir.absolutePath());

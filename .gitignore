@@ -1,7 +1,18 @@
-# compiled
+# bin
 bin
 bin_win
 bin_linux
-build*
+
+# make compiled
 Makefile
+.clangd
+*.o
+
+# qt compiled
+build*
 .qmake.stash
+moc_*
+qrc_*
+ui_*
+compile_commands.json
+
