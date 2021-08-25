@@ -1,6 +1,6 @@
 ﻿#include "easymesh.h"
 
-EasyMesh::EasyMesh(QMaterial *material, QObject *parent):QMesh3D(parent)
+EasyMesh::EasyMesh(QMaterial *material, QObject *parent) : QMesh3D(parent)
 {
     this->initializeOpenGLFunctions();
     this->array_buffer_.create();
@@ -147,7 +147,7 @@ void EasyMesh::loadObjFile(const QString &filename, std::vector<QMesh3D::VertexD
             vertices.push_back(QMesh3D::VertexData(pos_list[i]));
         }
         std::vector<QMesh3D::VertexData> res_data;
-        for(int i=0; i <face_list.size(); i++)
+        for(int i=0; i < face_list.size(); i++)
         {
             Vec3i f = face_list[i];
 
@@ -208,22 +208,14 @@ void EasyMesh::loadObjFile(const QString &filename, std::vector<QMesh3D::VertexD
 
 void EasyMesh::loadFile(const QString &filename, bool flat)
 {
-    std::vector<VertexData> array_data;
-    std::vector<FaceData> face_data;
-
     QFileInfo fileinfo(filename);
     if(fileinfo.suffix().toLower() == "obj")
     {
-        loadObjFile(filename, array_data, face_data, flat);
+        loadObjFile(filename, vertex_list, face_list, flat);
     }
 
-    for(int i = 0; i < array_data.size(); ++i)
-    {
-        vertex_list.emplace_back(array_data[i]);
-    }
-
-    updateArrayBuffer(array_data);
-    updateIndexBuffer(face_data,0,GL_TRIANGLES);
+    updateArrayBuffer(vertex_list);
+    updateIndexBuffer(face_list, 0, GL_TRIANGLES);
 }
 
 void EasyMesh::updateTransformMatrix()

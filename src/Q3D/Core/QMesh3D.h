@@ -85,11 +85,8 @@ public:
     void setSelected(bool t) {is_selected_ = t;}
     bool isSelected() const {return is_selected_;}
 
-
-
     int array_size() const;
     void setColor(const QVector4D &color);
-
 
     void writeVertex(int vid, const VertexData& data);
     VertexData readVertex(int vid);
@@ -97,11 +94,9 @@ public:
     bool writeVertices(const std::vector<VertexData> &array_data);
     bool readVertices(std::vector<VertexData> &array_data);
 
-
     QVector3D get_bbox_vmin() const;
 
     QVector3D get_bbox_vmax() const;
-
 
     void getTransformedBBox(QVector3D &vmin, QVector3D &vmax) const;
     GLenum getGL_ElementType() const;

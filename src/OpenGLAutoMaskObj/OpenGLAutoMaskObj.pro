@@ -24,13 +24,7 @@ HEADERS += \
     OpenGL_Auto_Obj_Masker/PointMapWidget.h \
     OpenGL_Auto_Obj_Masker/easymesh.h
 
-SOURCES += \
-    main.cpp \
-    mainwindow.cpp
-
-HEADERS += \
-    mainwindow.h
-
+# Q3D
 INCLUDEPATH += $$PWD/../Q3D
 
 DEPENDPATH += $$PWD/../Q3D
@@ -46,6 +40,22 @@ LIBS += \
     -L$$PWD/../../bin_linux/q3dlib/ \
     -lq3d_gcl
 }
+
+# OpenMesh
+INCLUDEPATH += \
+    /usr/local/include/
+
+LIBS += \
+    -L/usr/local/lib/OpenMesh/ \
+    -lOpenMeshCore \
+    -lOpenMeshTools
+
+SOURCES += \
+    main.cpp \
+    mainwindow.cpp
+
+HEADERS += \
+    mainwindow.h
 
 FORMS += \
     mainwindow.ui

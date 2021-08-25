@@ -20,6 +20,7 @@ public:
 
 public:
     std::vector<VertexData> vertex_list;
+    std::vector<FaceData> face_list;
     QMatrix4x4 transform_matrix;
     int label_idx;
 };

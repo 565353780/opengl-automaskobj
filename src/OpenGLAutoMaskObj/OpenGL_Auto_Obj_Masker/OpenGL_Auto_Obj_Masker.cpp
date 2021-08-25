@@ -1,13 +1,152 @@
 ﻿#include "OpenGL_Auto_Obj_Masker/OpenGL_Auto_Obj_Masker.h"
+#include "qdebug.h"
 
-OpenGL_Auto_Obj_Masker::OpenGL_Auto_Obj_Masker()
+bool EasyVertex2D::haveThisVertexNeighboor(
+    const int &neighboor_vertex_idx)
 {
+    if(neighboor_vertex_idx_vec.size() == 0)
+    {
+        return false;
+    }
 
+    for(const int &exist_neighboor_vertex_idx : neighboor_vertex_idx_vec)
+    {
+        if(exist_neighboor_vertex_idx == neighboor_vertex_idx)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
-OpenGL_Auto_Obj_Masker::~OpenGL_Auto_Obj_Masker()
+bool EasyVertex2D::haveThisFaceNeighboor(
+    const int &neighboor_face_idx)
 {
+    if(neighboor_face_idx_vec.size() == 0)
+    {
+        return false;
+    }
 
+    for(const int &exist_neighboor_face_idx : neighboor_face_idx_vec)
+    {
+        if(exist_neighboor_face_idx == neighboor_face_idx)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool EasyVertex2D::addVertexNeighboor(
+    const int &neighboor_vertex_idx)
+{
+    if(haveThisVertexNeighboor(neighboor_vertex_idx))
+    {
+        return true;
+    }
+    neighboor_vertex_idx_vec.emplace_back(neighboor_vertex_idx);
+    return true;
+}
+
+bool EasyVertex2D::addFaceNeighboor(
+    const int &neighboor_face_idx)
+{
+    if(haveThisFaceNeighboor(neighboor_face_idx))
+    {
+        return true;
+    }
+    neighboor_face_idx_vec.emplace_back(neighboor_face_idx);
+    return true;
+}
+
+bool EasyFace2D::setVertexIndex(
+    const int &vertex_idx_1,
+    const int &vertex_idx_2,
+    const int &vertex_idx_3)
+{
+    vertex_idx_vec.resize(3);
+    vertex_idx_vec[0] = vertex_idx_1;
+    vertex_idx_vec[1] = vertex_idx_2;
+    vertex_idx_vec[2] = vertex_idx_3;
+    return true;
+}
+
+bool EasyFace2D::haveThisVertex(
+    const int &vertex_idx)
+{
+    for(const int &face_vertex_idx : vertex_idx_vec)
+    {
+        if(face_vertex_idx == vertex_idx)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool EasyMesh2D::addVertex(
+    const int &x,
+    const int &y)
+{
+    EasyVertex2D vertex_2d;
+    vertex_2d.x = x;
+    vertex_2d.y = y;
+
+    vertex_2d_list.emplace_back(vertex_2d);
+
+    return true;
+}
+
+bool EasyMesh2D::addVertexNeighboor(
+    const int &vertex_1_idx,
+    const int &vertex_2_idx)
+{
+    if(vertex_1_idx < first_vertex_idx || vertex_1_idx >= vertex_2d_list.size() + first_vertex_idx)
+    {
+        std::cout << "Add Neighboor failed! Vertex 1 idx out of range" << std::endl;
+        std::cout << "valid value must in [" <<
+          0 << "," << vertex_2d_list.size() - first_vertex_idx <<
+          "]" << std::endl;
+        std::cout << "current value is " << vertex_1_idx << std::endl;
+        return false;
+    }
+    if(vertex_2_idx < first_vertex_idx || vertex_2_idx >= vertex_2d_list.size() + first_vertex_idx)
+    {
+        std::cout << "Add Neighboor failed! Vertex 2 idx out of range" << std::endl;
+        std::cout << "valid value must in [" <<
+          0 << "," << vertex_2d_list.size() - first_vertex_idx <<
+          "]" << std::endl;
+        std::cout << "current value is " << vertex_2_idx << std::endl;
+        return false;
+    }
+
+    vertex_2d_list[vertex_1_idx - first_vertex_idx].addVertexNeighboor(vertex_2_idx - first_vertex_idx);
+    vertex_2d_list[vertex_2_idx - first_vertex_idx].addVertexNeighboor(vertex_1_idx - first_vertex_idx);
+
+    return true;
+}
+
+bool EasyMesh2D::addFace(
+    const int &vertex_idx_1,
+    const int &vertex_idx_2,
+    const int &vertex_idx_3)
+{
+    EasyFace2D face_2d;
+    face_2d.setVertexIndex(
+        vertex_idx_1 - first_vertex_idx,
+        vertex_idx_2 - first_vertex_idx,
+        vertex_idx_3 - first_vertex_idx);
+    face_2d_list.emplace_back(face_2d);
+
+    for(const int &face_vertex_idx : face_2d.vertex_idx_vec)
+    {
+        vertex_2d_list[face_vertex_idx].addFaceNeighboor(face_2d_list.size() - 1);
+    }
+
+    return true;
 }
 
 int OpenGL_Auto_Obj_Masker::testOffScreen(QString filename)
@@ -126,10 +265,10 @@ bool OpenGL_Auto_Obj_Masker::initEnv()
 }
 
 bool OpenGL_Auto_Obj_Masker::addNormalizedMesh(
-    QString &mesh_file_path,
-    QVector3D &center,
-    QVector3D &eular,
-    int &label_idx)
+    const QString &mesh_file_path,
+    const QVector3D &center,
+    const QVector3D &eular,
+    const int &label_idx)
 {
   EasyMesh *mesh = createNormalizedMeshWithPose(mesh_file_path, center, eular, label_idx);
 
@@ -150,11 +289,10 @@ bool OpenGL_Auto_Obj_Masker::clearMesh()
     return true;
 }
 
-bool OpenGL_Auto_Obj_Masker::getMeshRect3D(EasyMesh *mesh, std::vector<float> &rect_3d)
+bool OpenGL_Auto_Obj_Masker::getMeshRect3D(
+    const EasyMesh *mesh,
+    std::vector<float> &rect_3d)
 {
-    mesh->updateTransformMatrix();
-
-    //获取mesh的所有点集
     std::vector<QVector3D> mesh_points;
 
     for(int i = 0; i < mesh->getVerticeSize(); ++i)
@@ -190,7 +328,10 @@ bool OpenGL_Auto_Obj_Masker::getMeshRect3D(EasyMesh *mesh, std::vector<float> &r
     return true;
 }
 
-bool OpenGL_Auto_Obj_Masker::setMeshPose(EasyMesh *mesh, QVector3D &center, QVector3D &eular)
+bool OpenGL_Auto_Obj_Masker::setMeshPose(
+    EasyMesh *mesh,
+    const QVector3D &center,
+    const QVector3D &eular)
 {
     //mesh旋转
     mesh->setEuler(eular);
@@ -198,10 +339,14 @@ bool OpenGL_Auto_Obj_Masker::setMeshPose(EasyMesh *mesh, QVector3D &center, QVec
     //mesh平移
     mesh->setOffset(center);
 
+    mesh->updateTransformMatrix();
+
     return true;
 }
 
-bool OpenGL_Auto_Obj_Masker::getMeshProjectPolygon(EasyMesh *mesh, std::vector<int> &polygon)
+bool OpenGL_Auto_Obj_Masker::getMeshProjectPolygon(
+    const EasyMesh *mesh,
+    std::vector<int> &polygon)
 {
     //设定标定rect初值
     int min_x = viewport_[2] - 1;
@@ -209,13 +354,11 @@ bool OpenGL_Auto_Obj_Masker::getMeshProjectPolygon(EasyMesh *mesh, std::vector<i
     int min_y = viewport_[3] - 1;
     int max_y = 0;
 
-    mesh->updateTransformMatrix();
-
     for(int i = 0; i < mesh->getVerticeSize(); ++i)
     {
-        std::vector<int> point_2d;
+        std::vector<float> point_2d;
 
-        Point3DToPoint2D(mesh->transform_matrix, mesh->vertex_list[i].position_, point_2d);
+        getProjectPoint2D(mesh->transform_matrix, mesh->vertex_list[i].position_, point_2d);
 
         min_x = fmin(min_x, point_2d[0]);
         max_x = fmax(max_x, point_2d[0]);
@@ -239,7 +382,8 @@ bool OpenGL_Auto_Obj_Masker::getMeshProjectPolygon(EasyMesh *mesh, std::vector<i
     return true;
 }
 
-bool OpenGL_Auto_Obj_Masker::getMeshProjectRects(std::vector<std::vector<int>> &project_rect_vec)
+bool OpenGL_Auto_Obj_Masker::getMeshProjectRects(
+    std::vector<std::vector<int>> &project_rect_vec)
 {
     project_rect_vec.resize(mesh_list_.size());
 
@@ -251,7 +395,8 @@ bool OpenGL_Auto_Obj_Masker::getMeshProjectRects(std::vector<std::vector<int>> &
     return true;
 }
 
-void OpenGL_Auto_Obj_Masker::saveImageAndLabel(QString &output_name)
+bool OpenGL_Auto_Obj_Masker::saveImageAndLabel(
+    const QString &output_name)
 {
     //抓取屏幕当前界面并保存
     QPixmap pixmap = w_.grab();
@@ -334,17 +479,15 @@ void OpenGL_Auto_Obj_Masker::saveImageAndLabel(QString &output_name)
     outfile << strJson.toStdString();
 
     outfile.close();
+
+    return true;
 }
 
 bool OpenGL_Auto_Obj_Masker::Create_Dataset()
 {
     qDebug() << "start create dataset !";
 
-    if(!initEnv())
-    {
-        std::cout << "Init environment failed!" << std::endl;
-        return false;
-    }
+    initEnv();
 
     QString source_dataset_path = "/home/chli/3D_FRONT/output/";
     QDir output_dataset_dir("/home/chli/3D_FRONT/output_mask_dataset");
@@ -374,22 +517,37 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset()
 
         for(QFileInfo model_file : model_file_list)
         {
-            if(model_file.fileName().split(".")[1] == "obj")
+            mesh_file_info_ = model_file;
+            if(mesh_file_info_.fileName().split(".")[1] == "obj")
             {
                 //qrand()
                 QVector3D position = QVector3D(0, 0, 2);
                 QVector3D rotation = QVector3D(0, 0, 0);
                 int label_idx = 0;
 
-                QString mesh_file_path = model_file.absoluteFilePath();
-                addNormalizedMesh( mesh_file_path, position, rotation, label_idx);
+                QString mesh_file_path = mesh_file_info_.absoluteFilePath();
+                addNormalizedMesh(mesh_file_path, position, rotation, label_idx);
+
+                MyOpenMesh open_mesh;
+                createOpenMesh(mesh_list_.back(), open_mesh);
+
+                EasyMesh2D mesh_2d;
+                getProjectMesh2D(mesh_list_.back(), mesh_2d);
+
+                std::vector<EasyMesh2D> mesh_2d_vec;
+
+                splitMesh2D(mesh_2d, mesh_2d_vec);
+
+                std::vector<EasyPolygon> polygon_vec;
+
+                getPolygonVec(mesh_2d_vec, polygon_vec);
 
                 ++solved_obj_num;
                 qDebug() << solved_obj_num << " / " << model_file_list.size();
             }
 
             QString output_file_path = output_dataset_dir.absolutePath() + "/" + QString::number(solved_obj_num);
-            //保存抓取图片和对应json文件
+
             saveImageAndLabel(output_file_path);
 
             clearMesh();
@@ -400,6 +558,9 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset()
             }
         }
     }
+
+    //更新主窗口的显示
+    w_.show();
 
 //    QFile file("../Server_DataBase/train_dataset/darknet_dataset/my_labels.txt");
 
@@ -416,75 +577,6 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset()
 
 //        file.close();
 //    }
-
-    //更新主窗口的显示
-    w_.show();
-
-//    testOnScreen();
-//    QDir dir("3waypipe");
-//    QStringList filters;
-//    filters<<"*.ply";
-//    foreach (QFileInfo fileinfo, dir.entryInfoList(filters)) {
-//        qDebug()<<fileinfo.absoluteFilePath();
-//        testOffScreen(fileinfo.absoluteFilePath());
-//    }
-
-
-//    testOnScreen();
-//    testOffScreen("0000.ply");
-
-//    using namespace GCL;
-//    QOpenGLContext ctx;;
-//    QSurfaceFormat surfaceFmt;
-//    if(QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL)
-//    {
-//        surfaceFmt.setRenderableType(QSurfaceFormat::OpenGL);
-//    }
-//    else
-//    {
-//        surfaceFmt.setRenderableType(QSurfaceFormat::OpenGLES);
-//        //surfaceFmt.setVersion(3,0);
-//    }
-//    ctx.setFormat(surfaceFmt);
-//    bool b = ctx.create();
-//    surfaceFmt.setDepthBufferSize(24);
-//    QSurfaceFormat::setDefaultFormat(surfaceFmt);
-
-//    QOffscreenSurface* pSurface = new QOffscreenSurface;
-//    pSurface->setFormat(surfaceFmt);
-//    pSurface->create();
-
-//    ctx.makeCurrent(pSurface);
-
-
-//    Q3DScene scene;
-
-
-//    scene.init();
-
-//   material_ = new QMaterial(&scene);
-//    material_->linkShaders(":/shaders/simple_vshader.glsl",":/shaders/simple_fshader.glsl");
-//    QImage image1("cube.png");
-//    material_->addUniformTextureImage("texture",image1);
-//    scene_.addModel(new QCubeMesh(material_, &scene));
-//    QMatrix4x4 matrix;
-//    matrix.lookAt(QVector3D(0,0,0),QVector3D(0,0,1),QVector3D(0,1,0));
-//    matrix.translate(-0,0,10);
-
-//    scene_.setDefaultModelMatrix(matrix);
-//    scene_.setDefaultView();
-//    int w = 800;
-//    int h = 800;
-//    QOpenGLFramebufferObject fbo(QSize(w,h),QOpenGLFramebufferObject::Depth);
-//    scene_.resize(w,h);
-
-//    scene_.manipulator_rotate(0,10);
-//    fbo.bind();
-//    scene_.render();
-//    fbo.bindDefault();
-//    QImage image = fbo.toImage();
-//    image.save("test.png");
-
     return 1;
 }
 
@@ -506,21 +598,8 @@ void OpenGL_Auto_Obj_Masker::setGLFormat()
     QSurfaceFormat::setDefaultFormat(format);
 }
 
-bool OpenGL_Auto_Obj_Masker::Point3DToPoint2D(QMatrix4x4 &transform_matrix, QVector3D &point_3d, std::vector<int> &point_2d)
-{
-    point_2d.resize(2, -1);
-
-    QVector3D mesh_point_3d_trans = transform_matrix.map(point_3d);
-
-    QVector3D window_point_2d = scene_->project(mesh_point_3d_trans);
-
-    point_2d[0] = viewport_[0] + (window_point_2d[0] + 1) * viewport_[2] / 2;
-    point_2d[1] = viewport_[1] + (window_point_2d[1] + 1) * viewport_[3] / 2;
-
-    return true;
-}
-
-bool OpenGL_Auto_Obj_Masker::normalizeMesh(EasyMesh *mesh)
+bool OpenGL_Auto_Obj_Masker::normalizeMesh(
+    EasyMesh *mesh)
 {
     std::vector<float> rect_3d;
     getMeshRect3D(mesh, rect_3d);
@@ -543,10 +622,15 @@ bool OpenGL_Auto_Obj_Masker::normalizeMesh(EasyMesh *mesh)
 
     mesh->updateArrayBuffer(mesh->vertex_list);
 
+    mesh->updateTransformMatrix();
+
     return true;
 }
 
-bool OpenGL_Auto_Obj_Masker::transformMesh(EasyMesh *mesh, QVector3D &center, QVector3D &eular)
+bool OpenGL_Auto_Obj_Masker::transformMesh(
+    EasyMesh *mesh,
+    const QVector3D &center,
+    const QVector3D &eular)
 {
     //mesh旋转
     mesh->rotateEuler(eular);
@@ -554,10 +638,14 @@ bool OpenGL_Auto_Obj_Masker::transformMesh(EasyMesh *mesh, QVector3D &center, QV
     //mesh平移
     mesh->translate(center);
 
+    mesh->updateTransformMatrix();
+
     return true;
 }
 
-EasyMesh *OpenGL_Auto_Obj_Masker::createMesh(QString &mesh_name, int &label_idx)
+EasyMesh *OpenGL_Auto_Obj_Masker::createMesh(
+    const QString &mesh_file_path,
+    const int &label_idx)
 {
     //申请新的mesh结构
     EasyMesh *mesh = new EasyMesh(material_, scene_);
@@ -565,7 +653,7 @@ EasyMesh *OpenGL_Auto_Obj_Masker::createMesh(QString &mesh_name, int &label_idx)
     mesh->label_idx = label_idx;
 
     //加载obj到mesh
-    mesh->loadFile(mesh_name);
+    mesh->loadFile(mesh_file_path);
 
     //添加mesh到场景中
     scene_->addModel(mesh);
@@ -574,12 +662,12 @@ EasyMesh *OpenGL_Auto_Obj_Masker::createMesh(QString &mesh_name, int &label_idx)
 }
 
 EasyMesh *OpenGL_Auto_Obj_Masker::createNormalizedMeshWithPose(
-    QString &mesh_name,
-    QVector3D &center,
-    QVector3D &eular,
-    int &label_idx)
+    const QString &mesh_file_path,
+    const QVector3D &center,
+    const QVector3D &eular,
+    const int &label_idx)
 {
-    EasyMesh *mesh = createMesh(mesh_name, label_idx);
+    EasyMesh *mesh = createMesh(mesh_file_path, label_idx);
 
     normalizeMesh(mesh);
 
@@ -588,7 +676,221 @@ EasyMesh *OpenGL_Auto_Obj_Masker::createNormalizedMeshWithPose(
     return mesh;
 }
 
-bool OpenGL_Auto_Obj_Masker::getMeshProjectRect(EasyMesh *mesh, std::vector<int> &project_rect)
+bool OpenGL_Auto_Obj_Masker::createOpenMesh(
+    const EasyMesh *mesh,
+    MyOpenMesh &open_mesh)
+{
+    MyOpenMesh::VertexHandle vh[mesh->vertex_list.size()];
+
+    for(int i = 0; i < mesh->vertex_list.size(); ++i)
+    {
+        std::vector<float> point_2d;
+        getProjectPoint2D(mesh->transform_matrix, mesh->vertex_list[i].position_, point_2d);
+        vh[i] = open_mesh.add_vertex(MyOpenMesh::Point( point_2d[0], point_2d[1], 0));
+    }
+    for(int i = 0; i < mesh->face_list.size() / 3; ++i)
+    {
+        std::vector<MyOpenMesh::VertexHandle> fvh;
+        for(int j = 0; j < 3; ++j)
+        {
+            fvh.emplace_back(vh[3 * i + j]);
+        }
+        open_mesh.add_face(fvh);
+    }
+
+    QString output_file_path = "/home/chli/3D_FRONT/" + mesh_file_info_.fileName();
+
+    saveOpenMesh(open_mesh, output_file_path);
+
+    return true;
+}
+
+bool OpenGL_Auto_Obj_Masker::saveOpenMesh(
+    const MyOpenMesh &open_mesh,
+    const QString &output_file_path)
+{
+    try
+    {
+        if (!OpenMesh::IO::write_mesh(open_mesh, output_file_path.toStdString()))
+        {
+            std::cerr << "Cannot write mesh to file '" << output_file_path.toStdString() << "'" << std::endl;
+            return false;
+        }
+    }
+    catch (std::exception& x)
+    {
+        std::cerr << x.what() << std::endl;
+        return false;
+    }   
+    return true;
+}
+
+bool OpenGL_Auto_Obj_Masker::getProjectPoint2D(
+    const QMatrix4x4 &transform_matrix,
+    const QVector3D &point_3d,
+    std::vector<float> &point_2d)
+{
+    point_2d.resize(2, -1);
+
+    QVector3D mesh_point_3d_trans = transform_matrix.map(point_3d);
+
+    QVector3D window_point_2d = scene_->project(mesh_point_3d_trans);
+
+    point_2d[0] = viewport_[0] + (window_point_2d[0] + 1) * viewport_[2] / 2;
+    point_2d[1] = viewport_[1] + (window_point_2d[1] + 1) * viewport_[3] / 2;
+
+    return true;
+}
+
+bool OpenGL_Auto_Obj_Masker::getProjectMesh2D(
+    const EasyMesh *mesh,
+    EasyMesh2D &mesh_2d)
+{
+    for(const QMesh3D::VertexData &vertex : mesh->vertex_list)
+    {
+        std::vector<float> point_2d;
+        getProjectPoint2D(mesh->transform_matrix, vertex.position_, point_2d);
+        mesh_2d.addVertex(point_2d[0], point_2d[1]);
+    }
+    for(int i = 0; i < mesh->face_list.size() / 3; ++i)
+    {
+        for(int j = 0; j < 3; ++j)
+        {
+            int vertex_1_idx = mesh->face_list[3 * i + j];
+            int vertex_2_idx = mesh->face_list[3 * i + ((j + 1) % 3)];
+            mesh_2d.addVertexNeighboor(vertex_1_idx, vertex_2_idx);
+        }
+    }
+
+    return true;
+}
+
+bool OpenGL_Auto_Obj_Masker::findConnectedVertex(
+    const EasyMesh2D &mesh_2d,
+    const std::vector<int> current_search_vertex_idx_vec,
+    EasyMesh2D &sub_mesh_2d,
+    std::vector<bool> &vertex_connected_vec,
+    std::vector<int> &sub_vertex_real_idx_vec)
+{
+    std::vector<int> new_search_vertex_vec;
+    for(const int &current_vertex_idx : current_search_vertex_idx_vec)
+    {
+        int current_sub_vertex_idx = -1;
+        for(int i = 0; i < sub_vertex_real_idx_vec.size(); ++i)
+        {
+            if(sub_vertex_real_idx_vec[i] == current_vertex_idx)
+            {
+                current_sub_vertex_idx = i;
+                break;
+            }
+        }
+        for(const int &current_neighboor_vertex_idx : mesh_2d.vertex_2d_list[current_vertex_idx].neighboor_vertex_idx_vec)
+        {
+            if(!vertex_connected_vec[current_neighboor_vertex_idx])
+            {
+                sub_mesh_2d.addVertex(mesh_2d.vertex_2d_list[current_neighboor_vertex_idx].x, mesh_2d.vertex_2d_list[current_neighboor_vertex_idx].y);
+                vertex_connected_vec[current_neighboor_vertex_idx] = true;
+
+                new_search_vertex_vec.emplace_back(current_neighboor_vertex_idx);
+
+                sub_vertex_real_idx_vec.emplace_back(current_neighboor_vertex_idx);
+
+                sub_mesh_2d.addVertexNeighboor(current_sub_vertex_idx, sub_vertex_real_idx_vec.size() - 1);
+
+                continue;
+            }
+
+            if(find(new_search_vertex_vec.cbegin(), new_search_vertex_vec.cend(), current_neighboor_vertex_idx) != new_search_vertex_vec.cend())
+            {
+                continue;
+            }
+
+            int current_neighboor_sub_vertex_idx = -1;
+            for(int i = 0; i < sub_vertex_real_idx_vec.size(); ++i)
+            {
+                if(sub_vertex_real_idx_vec[i] == current_neighboor_vertex_idx)
+                {
+                    current_neighboor_sub_vertex_idx = i;
+                    break;
+                }
+            }
+            sub_mesh_2d.addVertexNeighboor(current_sub_vertex_idx, current_neighboor_sub_vertex_idx);
+        }
+    }
+
+    if(new_search_vertex_vec.size() == 0)
+    {
+        return true;
+    }
+
+    return findConnectedVertex(mesh_2d, new_search_vertex_vec, sub_mesh_2d, vertex_connected_vec, sub_vertex_real_idx_vec);
+}
+
+bool OpenGL_Auto_Obj_Masker::splitMesh2D(
+    const EasyMesh2D &mesh_2d,
+    std::vector<EasyMesh2D> &mesh_2d_vec)
+{
+    mesh_2d_vec.clear();
+
+    int connected_vertex_num = 0;
+    std::vector<bool> vertex_connected_vec;
+    vertex_connected_vec.resize(mesh_2d.vertex_2d_list.size(), false);
+
+    while(connected_vertex_num < mesh_2d.vertex_2d_list.size())
+    {
+        EasyMesh2D sub_mesh_2d;
+
+        for(int i = 0; i < vertex_connected_vec.size(); ++i)
+        {
+            if(!vertex_connected_vec[i])
+            {
+                sub_mesh_2d.addVertex(mesh_2d.vertex_2d_list[i].x, mesh_2d.vertex_2d_list[i].y);
+                vertex_connected_vec[i] = true;
+
+                std::vector<int> current_search_vertex_idx_vec;
+                current_search_vertex_idx_vec.emplace_back(i);
+
+                std::vector<int> sub_vertex_real_idx_vec;
+                sub_vertex_real_idx_vec.emplace_back(i);
+
+                findConnectedVertex(mesh_2d, current_search_vertex_idx_vec, sub_mesh_2d, vertex_connected_vec, sub_vertex_real_idx_vec);
+
+                mesh_2d_vec.emplace_back(sub_mesh_2d);
+
+                connected_vertex_num += sub_mesh_2d.vertex_2d_list.size();
+
+                break;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool OpenGL_Auto_Obj_Masker::getPolygon(
+    const EasyMesh2D &mesh_2d,
+    EasyPolygon &polygon)
+{
+    return true;
+}
+
+bool OpenGL_Auto_Obj_Masker::getPolygonVec(
+    const std::vector<EasyMesh2D> &mesh_2d_vec,
+    std::vector<EasyPolygon> &polygon_vec)
+{
+    polygon_vec.resize(mesh_2d_vec.size());
+
+    for(int i = 0; i < mesh_2d_vec.size(); ++i)
+    {
+        getPolygon(mesh_2d_vec[i], polygon_vec[i]);
+    }
+
+    return true;
+}
+
+bool OpenGL_Auto_Obj_Masker::getMeshProjectRect(
+    const EasyMesh *mesh,
+    std::vector<int> &project_rect)
 {
     //设定标定rect初值
     int min_x = viewport_[2] - 1;
@@ -596,13 +898,12 @@ bool OpenGL_Auto_Obj_Masker::getMeshProjectRect(EasyMesh *mesh, std::vector<int>
     int min_y = viewport_[3] - 1;
     int max_y = 0;
 
-    mesh->updateTransformMatrix();
 
     for(int i = 0; i < mesh->getVerticeSize(); ++i)
     {
-        std::vector<int> point_2d;
+        std::vector<float> point_2d;
 
-        Point3DToPoint2D(mesh->transform_matrix, mesh->vertex_list[i].position_, point_2d);
+        getProjectPoint2D(mesh->transform_matrix, mesh->vertex_list[i].position_, point_2d);
 
         min_x = fmin(min_x, point_2d[0]);
         max_x = fmax(max_x, point_2d[0]);
