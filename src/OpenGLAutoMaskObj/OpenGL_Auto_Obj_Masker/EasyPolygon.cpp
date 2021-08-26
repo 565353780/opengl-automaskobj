@@ -1,4 +1,5 @@
 #include "EasyPolygon.h"
+#include <sys/types.h>
 
 bool EasyPoint2D::setPosition(
     const float &position_x,
@@ -73,6 +74,54 @@ bool EasyLine2D::setPosition(
     return true;
 }
 
+bool EasyLine2D::setPosition(
+    const EasyPoint2D &point_1_data,
+    const EasyPoint2D &point_2_data)
+{
+    return setPosition(
+        point_1_data.x,
+        point_1_data.y,
+        point_2_data.x,
+        point_2_data.y);
+}
+
+bool EasyIntersection2D::setPosition(
+    const float &position_x,
+    const float &position_y)
+{
+    point.x = position_x;
+    point.y = position_y;
+
+    return true;
+}
+
+bool EasyIntersection2D::setPosition(
+    const EasyPoint2D &point_data)
+{
+    return setPosition(point_data.x, point_data.y);
+}
+
+bool EasyIntersection2D::addPolygonIdx(
+    const int &polygon_idx,
+    const int &line_idx)
+{
+    std::pair<int, int> polygon_idx_pair;
+    polygon_idx_pair.first = polygon_idx;
+    polygon_idx_pair.second = line_idx;
+
+    polygon_idx_pair_vec.emplace_back(polygon_idx_pair);
+
+    return true;
+}
+
+bool EasyPolygon::setID(
+    const int &id_data)
+{
+    id = id_data;
+
+    return true;
+}
+
 bool EasyPolygon::insertPoint(
     const EasyPoint2D &point_2d,
     const int &insert_idx)
@@ -109,6 +158,32 @@ bool EasyPolygon::removePoint(
     return true;
 }
 
+bool EasyPolygon::updateLineVec()
+{
+    line_list.resize(point_list.size());
+
+    if(point_list.size() == 0)
+    {
+        return true;
+    }
+
+    for(size_t i = 0; i < point_list.size(); ++i)
+    {
+        int next_point_idx = i + 1;
+        if(i == point_list.size() - 1)
+        {
+            next_point_idx = 0;
+        }
+
+        EasyLine2D new_line;
+        line_list[i].setPosition(
+            point_list[i],
+            point_list[next_point_idx]);
+    }
+
+    return true;
+}
+
 bool EasyPolygon::isClockWise()
 {
     if(getPolygonArea() > 0)
@@ -138,7 +213,7 @@ float EasyPolygon::getPolygonArea()
 
     float area = 0;
     
-    for(int i = 0; i < point_list.size(); ++i)
+    for(size_t i = 0; i < point_list.size(); ++i)
     {
         int next_point_idx = i + 1;
         if(i == point_list.size() - 1)
@@ -179,53 +254,30 @@ bool EasyPolygon::getPolygonRect(
     return true;
 }
 
-bool EasyPolygon::isPointInPolygon(
-    const EasyPoint2D &point)
-{
-    float angle_value_sum = 0;
-
-    for(int i = 0; i < point_list.size(); ++i)
-    {
-        int next_point_idx = i + 1;
-        if(i == point_list.size() - 1)
-        {
-            next_point_idx = 0;
-        }
-
-        angle_value_sum += angle(
-            point_list[i],
-            point,
-            point_list[next_point_idx],
-            point);
-    }
-
-    float angle_value_sum_to_0 = fabs(angle_value_sum);
-    float angle_value_sum_to_pi = fabs(angle_value_sum_to_0 - 3.14);
-    float angle_value_sum_to_2pi = fabs(angle_value_sum - 6.28);
-
-    if(angle_value_sum_to_0 < angle_value_sum_to_pi)
-    {
-        return false;
-    }
-
-    if(angle_value_sum_to_2pi < angle_value_sum_to_pi)
-    {
-        return true;
-    }
-
-    // here is the case point on the bound of polygon
-    return true;
-}
-
-bool EasyPolygon::getUnionPolygon(
-    const EasyPolygon &polygon_1,
-    const EasyPolygon &polygon_2,
+bool EasyMask::getUnionPolygon(
+    EasyPolygon &polygon_1,
+    EasyPolygon &polygon_2,
     EasyPolygon &union_polygon)
 {
+    getPolygonIntersection(polygon_1, polygon_2);
+
+    EasyPolygon cross_polygon_1;
+    EasyPolygon cross_polygon_2;
+
+    std::vector<bool> intersection_passed_through_vec;
+    intersection_passed_through_vec.resize(intersection_vec.size(), false);
+
+    int intersection_passed_through_num = 0;
+
+    while(intersection_passed_through_num < intersection_passed_through_vec.size())
+    {
+        break;
+    }
+
     return true;
 }
 
-float EasyPolygon::dot(
+float EasyMask::dot(
     const float &x_1,
     const float &y_1,
     const float &x_2,
@@ -234,14 +286,14 @@ float EasyPolygon::dot(
     return x_1 * x_2 + y_1 * y_2;
 }
 
-float EasyPolygon::dot(
+float EasyMask::dot(
     const EasyLine2D &line_1,
     const EasyLine2D &line_2)
 {
     return dot(line_1.x_diff, line_1.y_diff, line_2.x_diff, line_2.y_diff);
 }
 
-float EasyPolygon::cross(
+float EasyMask::cross(
     const float &x_1,
     const float &y_1,
     const float &x_2,
@@ -250,14 +302,14 @@ float EasyPolygon::cross(
     return x_1 * y_2 - x_2 * y_1;
 }
 
-float EasyPolygon::cross(
+float EasyMask::cross(
     const EasyLine2D &line_1,
     const EasyLine2D &line_2)
 {
     return cross(line_1.x_diff, line_1.y_diff, line_2.x_diff, line_2.y_diff);
 }
 
-float EasyPolygon::lineLength2(
+float EasyMask::lineLength2(
     const EasyLine2D &line)
 {
     float length_2 = pow(line.x_diff, 2) + pow(line.y_diff, 2);
@@ -265,13 +317,13 @@ float EasyPolygon::lineLength2(
     return length_2;
 }
 
-float EasyPolygon::lineLength(
+float EasyMask::lineLength(
     const EasyLine2D &line)
 {
     return sqrt(lineLength2(line));
 }
 
-float EasyPolygon::angle(
+float EasyMask::angle(
     const EasyLine2D &line_1,
     const EasyLine2D &line_2)
 {
@@ -301,7 +353,7 @@ float EasyPolygon::angle(
     return angle_value;
 }
 
-bool EasyPolygon::isPointInRect(
+bool EasyMask::isPointInRect(
     const EasyPoint2D &point,
     const EasyRect2D &rect)
 {
@@ -328,7 +380,7 @@ bool EasyPolygon::isPointInRect(
     return true;
 }
 
-bool EasyPolygon::isPointInLineRect(
+bool EasyMask::isPointInLineRect(
     const EasyPoint2D &point,
     const EasyLine2D &line)
 {
@@ -355,7 +407,7 @@ bool EasyPolygon::isPointInLineRect(
     return true;
 }
 
-bool EasyPolygon::isRectCross(
+bool EasyMask::isRectCross(
     const EasyLine2D &line_1,
     const EasyLine2D &line_2)
 {
@@ -382,7 +434,7 @@ bool EasyPolygon::isRectCross(
     return true;
 }
 
-bool EasyPolygon::isRectCross(
+bool EasyMask::isRectCross(
     const EasyRect2D &rect_1,
     const EasyRect2D &rect_2)
 {
@@ -409,7 +461,7 @@ bool EasyPolygon::isRectCross(
     return true;
 }
 
-bool EasyPolygon::isLineCross(
+bool EasyMask::isLineCross(
     const EasyLine2D &line_1,
     const EasyLine2D &line_2)
 {
@@ -422,15 +474,11 @@ bool EasyPolygon::isLineCross(
     EasyLine2D line_22_to_12;
 
     line_22_to_11.setPosition(
-        line_2.point_2.x,
-        line_2.point_2.y,
-        line_1.point_1.x,
-        line_1.point_1.y);
+        line_2.point_2,
+        line_1.point_1);
     line_22_to_12.setPosition(
-        line_2.point_2.x,
-        line_2.point_2.y,
-        line_1.point_2.x,
-        line_1.point_2.y);
+        line_2.point_2,
+        line_1.point_2);
 
     float line_1_point_1_cross_line_2 =
       cross(line_22_to_11, line_2);
@@ -460,7 +508,7 @@ bool EasyPolygon::isLineCross(
     return false;
 }
 
-bool EasyPolygon::isLineParallel(
+bool EasyMask::isLineParallel(
     const EasyLine2D &line_1,
     const EasyLine2D &line_2)
 {
@@ -472,7 +520,7 @@ bool EasyPolygon::isLineParallel(
     return false;
 }
 
-bool EasyPolygon::isPointOnOpenBoundedLine(
+bool EasyMask::isPointOnOpenBoundedLine(
     const EasyPoint2D &point,
     const EasyLine2D &line)
 {
@@ -494,23 +542,68 @@ bool EasyPolygon::isPointOnOpenBoundedLine(
     return false;
 }
 
-bool EasyPolygon::isPolygonCross(
-    EasyPolygon &polygon)
+bool EasyMask::isPointInPolygon(
+    const EasyPoint2D &point,
+    const EasyPolygon &polygon)
 {
-    EasyRect2D self_pylygon_rect;
-    EasyRect2D polygon_rect;
+    float angle_value_sum = 0;
 
-    getPolygonRect(self_pylygon_rect);
-    polygon.getPolygonRect(polygon_rect);
+    for(size_t i = 0; i < polygon.point_list.size(); ++i)
+    {
+        int next_point_idx = i + 1;
+        if(i == polygon.point_list.size() - 1)
+        {
+            next_point_idx = 0;
+        }
 
-    if(!isRectCross(self_pylygon_rect, polygon_rect))
+        EasyLine2D line_1;
+        EasyLine2D line_2;
+        line_1.setPosition(
+            polygon.point_list[i],
+            point);
+        line_2.setPosition(
+            polygon.point_list[next_point_idx],
+            point);
+
+        angle_value_sum += angle(line_1, line_2);
+    }
+
+    float angle_value_sum_to_0 = fabs(angle_value_sum);
+    float angle_value_sum_to_pi = fabs(angle_value_sum_to_0 - 3.14);
+    float angle_value_sum_to_2pi = fabs(angle_value_sum - 6.28);
+
+    if(angle_value_sum_to_0 < angle_value_sum_to_pi)
     {
         return false;
     }
 
-    for(const EasyPoint2D &point : point_list)
+    if(angle_value_sum_to_2pi < angle_value_sum_to_pi)
     {
-        if(polygon.isPointInPolygon(point))
+        return true;
+    }
+
+    // here is the case point on the bound of polygon
+    return true;
+}
+
+bool EasyMask::isPolygonCross(
+    EasyPolygon &polygon_1,
+    EasyPolygon &polygon_2)
+{
+    EasyRect2D pylygon_1_rect;
+    EasyRect2D polygon_2_rect;
+
+    polygon_1.getPolygonRect(pylygon_1_rect);
+    polygon_2.getPolygonRect(polygon_2_rect);
+
+    if(!isRectCross(pylygon_1_rect, polygon_2_rect))
+    {
+        return false;
+    }
+
+    for(const EasyPoint2D &point : polygon_1.point_list)
+    {
+        if(isPointInPolygon(point, polygon_2))
         {
             return true;
         }
@@ -519,7 +612,7 @@ bool EasyPolygon::isPolygonCross(
     return false;
 }
 
-bool EasyPolygon::getLineCrossPoint(
+bool EasyMask::getLineCrossPoint(
     const EasyLine2D &line_1,
     const EasyLine2D &line_2,
     EasyPoint2D &line_cross_point)
@@ -554,7 +647,7 @@ bool EasyPolygon::getLineCrossPoint(
     return true;
 }
 
-bool EasyPolygon::getBoundedLineCrossPoints(
+bool EasyMask::getBoundedLineCrossPointVec(
     const EasyLine2D &line_1,
     const EasyLine2D &line_2,
     std::vector<EasyPoint2D> &line_cross_point_vec)
@@ -563,8 +656,7 @@ bool EasyPolygon::getBoundedLineCrossPoints(
 
     if(!isLineCross(line_1, line_2))
     {
-        std::cout << "EasyPolygon::getBoundedLineCrossPoints : line not crossed!" << std::endl;
-        return false;
+        return true;
     }
 
     if(isLineParallel(line_1, line_2))
@@ -617,7 +709,7 @@ bool EasyPolygon::getBoundedLineCrossPoints(
     return true;
 }
 
-bool EasyPolygon::isSamePoint(
+bool EasyMask::isSamePoint(
     const EasyPoint2D &point_1,
     const EasyPoint2D &point_2)
 {
@@ -629,25 +721,56 @@ bool EasyPolygon::isSamePoint(
     return false;
 }
 
-bool EasyPolygon::getPolygonIntersection(
-    const EasyPolygon &polygon_1,
-    const EasyPolygon &polygon_2,
-    std::vector<EasyPoint2D> &intersect_point_vec)
+bool EasyMask::getPolygonIntersection(
+    EasyPolygon &polygon_1,
+    EasyPolygon &polygon_2)
 {
-    for(int i = 0; i < polygon_1.point_list.size(); ++i)
-    {
-        int next_point_idx_1 = i + 1;
-        if(i == polygon_1.point_list.size() - 1)
-        {
-            next_point_idx_1 = 0;
-        }
+    intersection_vec.clear();
 
-        for(int j = 0; j < polygon_2.point_list.size(); ++j)
+    if(!isPolygonCross(polygon_1, polygon_2))
+    {
+        return true;
+    }
+
+    polygon_1.updateLineVec();
+    polygon_2.updateLineVec();
+
+    for(size_t i = 0; i < polygon_1.line_list.size(); ++i)
+    {
+        for(size_t j = 0; j < polygon_2.line_list.size(); ++j)
         {
-            int next_point_idx_2 = j + 1;
-            if(j == polygon_2.point_list.size())
+            std::vector<EasyPoint2D> line_cross_point_vec;
+            getBoundedLineCrossPointVec(
+                polygon_1.line_list[i],
+                polygon_2.line_list[j],
+                line_cross_point_vec);
+
+            if(line_cross_point_vec.size() > 0)
             {
-                next_point_idx_2 = 0;
+                for(const EasyPoint2D &line_cross_point : line_cross_point_vec)
+                {
+                    bool cross_point_exist = false;
+                    for(EasyIntersection2D &exist_intersection : intersection_vec)
+                    {
+                        if(isSamePoint(exist_intersection.point, line_cross_point))
+                        {
+                            exist_intersection.addPolygonIdx(polygon_1.id, i);
+                            exist_intersection.addPolygonIdx(polygon_2.id, j);
+                            cross_point_exist = true;
+                            break;
+                        }
+                    }
+
+                    if(!cross_point_exist)
+                    {
+                        EasyIntersection2D intersection;
+                        intersection.setPosition(line_cross_point);
+                        intersection.addPolygonIdx(polygon_1.id, i);
+                        intersection.addPolygonIdx(polygon_2.id, j);
+
+                        intersection_vec.emplace_back(intersection);
+                    }
+                }
             }
         }
     }

@@ -53,6 +53,10 @@ public:
         const float &position_x_2,
         const float &position_y_2);
 
+    bool setPosition(
+        const EasyPoint2D &point_1_data,
+        const EasyPoint2D &point_2_data);
+
     EasyPoint2D point_1;
     EasyPoint2D point_2;
 
@@ -62,6 +66,28 @@ public:
     float y_diff;
 };
 
+class EasyIntersection2D
+{
+public:
+    EasyIntersection2D()
+    {
+    }
+
+    bool setPosition(
+        const float &position_x,
+        const float &position_y);
+
+    bool setPosition(
+        const EasyPoint2D &point_data);
+
+    bool addPolygonIdx(
+        const int &polygon_idx,
+        const int &line_idx);
+
+    EasyPoint2D point;
+    std::vector<std::pair<int, int>> polygon_idx_pair_vec;
+};
+
 class EasyPolygon
 {
 public:
@@ -69,12 +95,17 @@ public:
     {
     }
 
+    bool setID(
+        const int &id_data);
+
     bool insertPoint(
         const EasyPoint2D &point_2d,
         const int &insert_idx=-1);
 
     bool removePoint(
         const int &remove_idx);
+
+    bool updateLineVec();
 
     bool isClockWise();
 
@@ -85,12 +116,22 @@ public:
     bool getPolygonRect(
         EasyRect2D &rect_2d);
 
-    bool isPointInPolygon(
-        const EasyPoint2D &point);
+    int id;
+
+    std::vector<EasyPoint2D> point_list;
+    std::vector<EasyLine2D> line_list;
+};
+
+class EasyMask
+{
+public:
+    EasyMask()
+    {
+    }
 
     bool getUnionPolygon(
-        const EasyPolygon &polygon_1,
-        const EasyPolygon &polygon_2,
+        EasyPolygon &polygon_1,
+        EasyPolygon &polygon_2,
         EasyPolygon &union_polygon);
 
 // private:
@@ -152,15 +193,20 @@ public:
         const EasyPoint2D &point,
         const EasyLine2D &line);
 
+    bool isPointInPolygon(
+        const EasyPoint2D &point,
+        const EasyPolygon &polygon);
+
     bool isPolygonCross(
-        EasyPolygon &polygon);
+        EasyPolygon &polygon_1,
+        EasyPolygon &polygon_2);
 
     bool getLineCrossPoint(
         const EasyLine2D &line_1,
         const EasyLine2D &line_2,
         EasyPoint2D &line_cross_point);
 
-    bool getBoundedLineCrossPoints(
+    bool getBoundedLineCrossPointVec(
         const EasyLine2D &line_1,
         const EasyLine2D &line_2,
         std::vector<EasyPoint2D> &line_cross_point_vec);
@@ -170,12 +216,11 @@ public:
         const EasyPoint2D &point_2);
 
     bool getPolygonIntersection(
-        const EasyPolygon &polygon_1,
-        const EasyPolygon &polygon_2,
-        std::vector<EasyPoint2D> &intersect_point_vec);
+        EasyPolygon &polygon_1,
+        EasyPolygon &polygon_2);
 
 private:
-    std::vector<EasyPoint2D> point_list;
-    std::vector<EasyLine2D> line_list;
+    std::vector<EasyPolygon> polygon_list;
+    std::vector<EasyIntersection2D> intersection_vec;
 };
 

@@ -620,6 +620,8 @@ bool OpenGL_Auto_Obj_Masker::getPolygon(
     const EasyMesh2D &mesh_2d,
     EasyPolygon &polygon)
 {
+    EasyMask mask;
+
     EasyPolygon polygon_;
     EasyPoint2D p1, p2, p3, p4;
     p1.setPosition(0, 0);
@@ -639,7 +641,7 @@ bool OpenGL_Auto_Obj_Masker::getPolygon(
         EasyPoint2D p;
         p.setPosition(0.1 * i, 0.5);
 
-        if(polygon_.isPointInPolygon(p))
+        if(mask.isPointInPolygon(p, polygon_))
         {
             std::cout << "point [" << p.x << "," << p.y << "] is in polygon" << std::endl;
         }
