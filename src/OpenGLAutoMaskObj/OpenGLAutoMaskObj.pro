@@ -17,12 +17,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     OpenGL_Auto_Obj_Masker/OpenGL_Auto_Obj_Masker.cpp \
     OpenGL_Auto_Obj_Masker/PointMapWidget.cpp \
-    OpenGL_Auto_Obj_Masker/easymesh.cpp
+    OpenGL_Auto_Obj_Masker/easymesh.cpp \
+    OpenGL_Auto_Obj_Masker/EasyMesh2D.cpp \
+    OpenGL_Auto_Obj_Masker/EasyPolygon.cpp
 
 HEADERS += \
     OpenGL_Auto_Obj_Masker/OpenGL_Auto_Obj_Masker.h \
     OpenGL_Auto_Obj_Masker/PointMapWidget.h \
-    OpenGL_Auto_Obj_Masker/easymesh.h
+    OpenGL_Auto_Obj_Masker/easymesh.h \
+    OpenGL_Auto_Obj_Masker/EasyMesh2D.h \
+    OpenGL_Auto_Obj_Masker/EasyPolygon.h
 
 # Q3D
 INCLUDEPATH += $$PWD/../Q3D
@@ -40,15 +44,6 @@ LIBS += \
     -L$$PWD/../../bin_linux/q3dlib/ \
     -lq3d_gcl
 }
-
-# OpenMesh
-INCLUDEPATH += \
-    /usr/local/include/
-
-LIBS += \
-    -L/usr/local/lib/OpenMesh/ \
-    -lOpenMeshCore \
-    -lOpenMeshTools
 
 SOURCES += \
     main.cpp \
