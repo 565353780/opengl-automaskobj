@@ -27,15 +27,39 @@ public:
     }
 
     bool setPosition(
-        const float &x_min,
-        const float &y_min,
-        const float &x_max,
-        const float &y_max);
+        const float &position_x_min,
+        const float &position_y_min,
+        const float &position_x_max,
+        const float &position_y_max);
 
     float x_min;
     float y_min;
     float x_max;
     float y_max;
+    float x_diff;
+    float y_diff;
+};
+
+class EasyLine2D
+{
+public:
+    EasyLine2D()
+    {
+    }
+
+    bool setPosition(
+        const float &position_x_1,
+        const float &position_y_1,
+        const float &position_x_2,
+        const float &position_y_2);
+
+    EasyPoint2D point_1;
+    EasyPoint2D point_2;
+
+    EasyRect2D rect;
+
+    float x_diff;
+    float y_diff;
 };
 
 class EasyPolygon
@@ -59,7 +83,10 @@ public:
     float getPolygonArea();
 
     bool getPolygonRect(
-        std::vector<float> &polygon_rect);
+        EasyRect2D &rect_2d);
+
+    bool isPointInPolygon(
+        const EasyPoint2D &point);
 
     bool getUnionPolygon(
         const EasyPolygon &polygon_1,
@@ -74,10 +101,8 @@ public:
         const float &y_2);
 
     float dot(
-        const EasyPoint2D &line_1_point_1,
-        const EasyPoint2D &line_1_point_2,
-        const EasyPoint2D &line_2_point_1,
-        const EasyPoint2D &line_2_point_2);
+        const EasyLine2D &line_1,
+        const EasyLine2D &line_2);
 
     float cross(
         const float &x_1,
@@ -86,92 +111,58 @@ public:
         const float &y_2);
 
     float cross(
-        const EasyPoint2D &line_1_point_1,
-        const EasyPoint2D &line_1_point_2,
-        const EasyPoint2D &line_2_point_1,
-        const EasyPoint2D &line_2_point_2);
+        const EasyLine2D &line_1,
+        const EasyLine2D &line_2);
 
     float lineLength2(
-        const EasyPoint2D &line_point_1,
-        const EasyPoint2D &line_point_2);
+        const EasyLine2D &line);
 
     float lineLength(
-        const EasyPoint2D &line_point_1,
-        const EasyPoint2D &line_point_2);
+        const EasyLine2D &line);
 
     float angle(
-        const EasyPoint2D &line_1_point_1,
-        const EasyPoint2D &line_1_point_2,
-        const EasyPoint2D &line_2_point_1,
-        const EasyPoint2D &line_2_point_2);
-
-    bool isPointInRect(
-        const float &point_x,
-        const float &point_y,
-        const float &rect_x_min,
-        const float &rect_y_min,
-        const float &rect_x_max,
-        const float &rect_y_max);
+        const EasyLine2D &line_1,
+        const EasyLine2D &line_2);
 
     bool isPointInRect(
         const EasyPoint2D &point,
-        const float &rect_x_min,
-        const float &rect_y_min,
-        const float &rect_x_max,
-        const float &rect_y_max);
+        const EasyRect2D &rect);
 
     bool isPointInLineRect(
         const EasyPoint2D &point,
-        const EasyPoint2D &line_point_1,
-        const EasyPoint2D &line_point_2);
+        const EasyLine2D &line);
 
     bool isRectCross(
-        const EasyPoint2D &line_1_point_1,
-        const EasyPoint2D &line_1_point_2,
-        const EasyPoint2D &line_2_point_1,
-        const EasyPoint2D &line_2_point_2);
+        const EasyLine2D &line_1,
+        const EasyLine2D &line_2);
+
+    bool isRectCross(
+        const EasyRect2D &rect_1,
+        const EasyRect2D &rect_2);
 
     bool isLineCross(
-        const EasyPoint2D &line_1_point_1,
-        const EasyPoint2D &line_1_point_2,
-        const EasyPoint2D &line_2_point_1,
-        const EasyPoint2D &line_2_point_2);
+        const EasyLine2D &line_1,
+        const EasyLine2D &line_2);
 
     bool isLineParallel(
-        const float &x_1,
-        const float &y_1,
-        const float &x_2,
-        const float &y_2);
-
-    bool isLineParallel(
-        const EasyPoint2D &line_1_point_1,
-        const EasyPoint2D &line_1_point_2,
-        const EasyPoint2D &line_2_point_1,
-        const EasyPoint2D &line_2_point_2);
+        const EasyLine2D &line_1,
+        const EasyLine2D &line_2);
 
     bool isPointOnOpenBoundedLine(
         const EasyPoint2D &point,
-        const EasyPoint2D &line_point_1,
-        const EasyPoint2D &line_point_2);
-
-    bool isPointInPolygon(
-        const EasyPoint2D &point);
+        const EasyLine2D &line);
 
     bool isPolygonCross(
         EasyPolygon &polygon);
 
     bool getLineCrossPoint(
-        const EasyPoint2D &line_1_point_1,
-        const EasyPoint2D &line_1_point_2,
-        const EasyPoint2D &line_2_point_1,
-        const EasyPoint2D &line_2_point_2,
+        const EasyLine2D &line_1,
+        const EasyLine2D &line_2,
         EasyPoint2D &line_cross_point);
 
     bool getBoundedLineCrossPoints(
-        const EasyPoint2D &line_1_point_1,
-        const EasyPoint2D &line_1_point_2,
-        const EasyPoint2D &line_2_point_1,
-        const EasyPoint2D &line_2_point_2,
+        const EasyLine2D &line_1,
+        const EasyLine2D &line_2,
         std::vector<EasyPoint2D> &line_cross_point_vec);
 
     bool isSamePoint(
@@ -185,5 +176,6 @@ public:
 
 private:
     std::vector<EasyPoint2D> point_list;
+    std::vector<EasyLine2D> line_list;
 };
 
