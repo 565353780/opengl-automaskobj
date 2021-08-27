@@ -33,8 +33,8 @@
 #include "../Q3D/Finder/QPointMapModelFinder.h"
 
 #include "easymesh.h"
-#include "EasyPolygon.h"
 #include "EasyMesh2D.h"
+#include "EasyMask2D.h"
 
 using namespace GCL;
 
@@ -120,11 +120,11 @@ private:
 
     bool getPolygon(
         const EasyMesh2D &mesh_2d,
-        EasyPolygon &polygon);
+        EasyPolygon2D &polygon);
 
     bool getPolygonVec(
         const std::vector<EasyMesh2D> &mesh_2d_vec,
-        std::vector<EasyPolygon> &polygon_vec);
+        std::vector<EasyPolygon2D> &polygon_vec);
 
     bool getMeshProjectRect(
         const EasyMesh *mesh,

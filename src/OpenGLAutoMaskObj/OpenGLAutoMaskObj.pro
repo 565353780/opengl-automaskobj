@@ -19,14 +19,24 @@ SOURCES += \
     OpenGL_Auto_Obj_Masker/PointMapWidget.cpp \
     OpenGL_Auto_Obj_Masker/easymesh.cpp \
     OpenGL_Auto_Obj_Masker/EasyMesh2D.cpp \
-    OpenGL_Auto_Obj_Masker/EasyPolygon.cpp
+    OpenGL_Auto_Obj_Masker/EasyPoint2D.cpp \
+    OpenGL_Auto_Obj_Masker/EasyRect2D.cpp \
+    OpenGL_Auto_Obj_Masker/EasyLine2D.cpp \
+    OpenGL_Auto_Obj_Masker/EasyIntersection2D.cpp \
+    OpenGL_Auto_Obj_Masker/EasyPolygon2D.cpp \
+    OpenGL_Auto_Obj_Masker/EasyMask2D.cpp
 
 HEADERS += \
     OpenGL_Auto_Obj_Masker/OpenGL_Auto_Obj_Masker.h \
     OpenGL_Auto_Obj_Masker/PointMapWidget.h \
     OpenGL_Auto_Obj_Masker/easymesh.h \
     OpenGL_Auto_Obj_Masker/EasyMesh2D.h \
-    OpenGL_Auto_Obj_Masker/EasyPolygon.h
+    OpenGL_Auto_Obj_Masker/EasyPoint2D.h \
+    OpenGL_Auto_Obj_Masker/EasyRect2D.h \
+    OpenGL_Auto_Obj_Masker/EasyLine2D.h \
+    OpenGL_Auto_Obj_Masker/EasyIntersection2D.h \
+    OpenGL_Auto_Obj_Masker/EasyPolygon2D.h \
+    OpenGL_Auto_Obj_Masker/EasyMask2D.h
 
 # Q3D
 INCLUDEPATH += $$PWD/../Q3D

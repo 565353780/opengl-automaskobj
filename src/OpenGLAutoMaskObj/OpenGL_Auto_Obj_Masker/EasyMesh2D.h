@@ -1,3 +1,6 @@
+#ifndef EASYMESH2D_H
+#define EASYMESH2D_H
+
 #include <iostream>
 #include <vector>
 
@@ -69,17 +72,18 @@ public:
 
 private:
     bool addVertexNeighboor(
-        const int &vertex_idx_1,
-        const int &vertex_idx_2);
+        const size_t &vertex_idx_1,
+        const size_t &vertex_idx_2);
 
     bool addFaceNeighboor(
-        const int &face_idx_1,
-        const int &face_idx_2);
+        const size_t &face_idx_1,
+        const size_t &face_idx_2);
 
 public:
     std::vector<EasyVertex2D> vertex_2d_list;
     std::vector<EasyFace2D> face_2d_list;
 
-    int first_vertex_idx=0;
+    size_t first_vertex_idx=0;
 };
 
+#endif //EASYMESH2D_H

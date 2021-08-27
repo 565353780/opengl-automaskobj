@@ -105,7 +105,7 @@ void EasyMesh::loadObjFile(const QString &filename, std::vector<QMesh3D::VertexD
                 flist.pop_back();
             }
 
-            for(int i=1; i < flist.size(); ++i)
+            for(size_t i=1; i < flist.size(); ++i)
             {
                 std::vector<std::string> f_t;
                 SplitString(flist[i],f_t,"/");
@@ -142,12 +142,12 @@ void EasyMesh::loadObjFile(const QString &filename, std::vector<QMesh3D::VertexD
 
     if(flat)
     {
-        for(int i=0; i < pos_list.size(); i++)
+        for(size_t i=0; i < pos_list.size(); i++)
         {
             vertices.push_back(QMesh3D::VertexData(pos_list[i]));
         }
         std::vector<QMesh3D::VertexData> res_data;
-        for(int i=0; i < face_list.size(); i++)
+        for(size_t i=0; i < face_list.size(); i++)
         {
             Vec3i f = face_list[i];
 
@@ -177,11 +177,11 @@ void EasyMesh::loadObjFile(const QString &filename, std::vector<QMesh3D::VertexD
     }
     else
     {
-        for(int i=0; i < pos_list.size(); i++)
+        for(size_t i=0; i < pos_list.size(); i++)
         {
             vertices.push_back(QMesh3D::VertexData(pos_list[i]));
         }
-        for(int i=0; i < face_list.size(); i++)
+        for(size_t i=0; i < face_list.size(); i++)
         {
             Vec3i f = face_list[i];
 

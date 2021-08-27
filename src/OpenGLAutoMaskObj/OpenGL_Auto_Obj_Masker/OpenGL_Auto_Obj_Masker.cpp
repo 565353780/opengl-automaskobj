@@ -56,7 +56,7 @@ bool OpenGL_Auto_Obj_Masker::addNormalizedMesh(
 
 bool OpenGL_Auto_Obj_Masker::clearMesh()
 {
-    for(int i = 0; i < mesh_list_.size(); ++i)
+    for(size_t i = 0; i < mesh_list_.size(); ++i)
     {
         delete(mesh_list_[i]);
     }
@@ -164,7 +164,7 @@ bool OpenGL_Auto_Obj_Masker::getMeshProjectRects(
 {
     project_rect_vec.resize(mesh_list_.size());
 
-    for(int i = 0; i < mesh_list_.size(); ++i)
+    for(size_t i = 0; i < mesh_list_.size(); ++i)
     {
         getMeshProjectRect(mesh_list_[i], project_rect_vec[i]);
     }
@@ -184,7 +184,7 @@ bool OpenGL_Auto_Obj_Masker::saveImageAndLabel(
     getMeshProjectRects(project_rect_vec);
 
     std::vector<int> rect_list_used_idx;
-    for(int i = 0; i < project_rect_vec.size(); ++i)
+    for(size_t i = 0; i < project_rect_vec.size(); ++i)
     {
         if(project_rect_vec[i][0] < project_rect_vec[i][2] && project_rect_vec[i][1] < project_rect_vec[i][3])
         {
@@ -194,7 +194,7 @@ bool OpenGL_Auto_Obj_Masker::saveImageAndLabel(
 
     //创建labels序列
     QJsonArray json_labels;
-    for(int i = 0; i < rect_list_used_idx.size(); ++i)
+    for(size_t i = 0; i < rect_list_used_idx.size(); ++i)
     {
         QJsonArray labelArray;
         labelArray.append(QString::number(mesh_list_[rect_list_used_idx[i]]->label_idx));
@@ -206,7 +206,7 @@ bool OpenGL_Auto_Obj_Masker::saveImageAndLabel(
     QJsonArray json_polygons;
 
     //创建polygon对应点序列并保存到polygons序列中
-    for(int i = 0; i < rect_list_used_idx.size(); ++i)
+    for(size_t i = 0; i < rect_list_used_idx.size(); ++i)
     {
         QJsonArray polygonsArray;
         QJsonArray polygonArray;
@@ -315,7 +315,7 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset()
 
                 splitMesh2D(mesh_2d, mesh_2d_vec);
 
-                std::vector<EasyPolygon> polygon_vec;
+                std::vector<EasyPolygon2D> polygon_vec;
 
                 getPolygonVec(mesh_2d_vec, polygon_vec);
 
@@ -348,7 +348,7 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset()
 
 //        QTextStream labels_out(&file);
 
-//        for(int i = 0; i < class_num; ++i)
+//        for(size_t i = 0; i < class_num; ++i)
 //        {
 //            labels_out << all_obj_file_list[true_obj_file_list[i]].fileName().split(".")[0] << endl;
 //        }
@@ -481,12 +481,12 @@ bool OpenGL_Auto_Obj_Masker::getProjectMesh2D(
         getProjectPoint2D(mesh->transform_matrix, vertex.position_, point_2d);
         mesh_2d.addVertex(point_2d[0], point_2d[1]);
     }
-    for(int i = 0; i < mesh->face_list.size() / 3; ++i)
+    for(size_t i = 0; i < mesh->face_list.size() / 3; ++i)
     {
         mesh_2d.addFace(mesh->face_list[3 * i], mesh->face_list[3 * i + 1], mesh->face_list[3 * i + 2]);
     }
 
-    for(int i = 0; i < mesh_2d.face_2d_list.size(); ++i)
+    for(size_t i = 0; i < mesh_2d.face_2d_list.size(); ++i)
     {
         mesh_2d.face_2d_list[i].neighboor_face_idx_vec.size();
     }
@@ -516,7 +516,7 @@ bool OpenGL_Auto_Obj_Masker::findConnectedFace(
                     mesh_2d.face_2d_list[current_neighboor_face_idx].vertex_idx_vec)
                 {
                     bool sub_mesh_2d_have_this_face_vertex_idx = false;
-                    for(int i = 0; i < sub_vertex_real_idx_vec.size(); ++i)
+                    for(size_t i = 0; i < sub_vertex_real_idx_vec.size(); ++i)
                     {
                         if(sub_vertex_real_idx_vec[i] == current_neighboor_face_vertex_idx)
                         {
@@ -568,7 +568,7 @@ bool OpenGL_Auto_Obj_Masker::splitMesh2D(
 {
     mesh_2d_vec.clear();
 
-    int connected_face_num = 0;
+    size_t connected_face_num = 0;
     std::vector<bool> face_connected_vec;
     face_connected_vec.resize(mesh_2d.face_2d_list.size(), false);
 
@@ -576,7 +576,7 @@ bool OpenGL_Auto_Obj_Masker::splitMesh2D(
     {
         EasyMesh2D sub_mesh_2d;
 
-        for(int i = 0; i < face_connected_vec.size(); ++i)
+        for(size_t i = 0; i < face_connected_vec.size(); ++i)
         {
             if(!face_connected_vec[i])
             {
@@ -618,38 +618,49 @@ bool OpenGL_Auto_Obj_Masker::splitMesh2D(
 
 bool OpenGL_Auto_Obj_Masker::getPolygon(
     const EasyMesh2D &mesh_2d,
-    EasyPolygon &polygon)
+    EasyPolygon2D &polygon)
 {
-    EasyMask mask;
+    EasyMask2D mask;
 
-    EasyPolygon polygon_;
+    EasyPolygon2D polygon_;
+    polygon_.setID(0);
+
     EasyPoint2D p1, p2, p3, p4;
     p1.setPosition(0, 0);
     p2.setPosition(0, 1);
     p3.setPosition(1, 1);
     p4.setPosition(1, 0);
 
-    polygon_.insertPoint(p1);
-    polygon_.insertPoint(p2);
-    polygon_.insertPoint(p3);
-    polygon_.insertPoint(p4);
+    polygon_.addPoint(p1);
+    polygon_.addPoint(p2);
+    polygon_.addPoint(p3);
+    polygon_.addPoint(p4);
 
-    polygon_.setClockWise();
+    EasyPolygon2D polygon_2;
+    polygon_2.setID(1);
 
-    for(int i = -2; i < 10; ++i)
-    {
-        EasyPoint2D p;
-        p.setPosition(0.1 * i, 0.5);
+    EasyPoint2D p12, p22, p32, p42;
+    p12.setPosition(0, 0);
+    p22.setPosition(0, 1);
+    p32.setPosition(1, 1);
+    p42.setPosition(1, 0);
 
-        if(mask.isPointInPolygon(p, polygon_))
-        {
-            std::cout << "point [" << p.x << "," << p.y << "] is in polygon" << std::endl;
-        }
-        else
-        {
-            std::cout << "point [" << p.x << "," << p.y << "] not in polygon" << std::endl;
-        }
-    }
+    polygon_2.addPoint(p12);
+    polygon_2.addPoint(p22);
+    polygon_2.addPoint(p32);
+    polygon_2.addPoint(p42);
+
+    polygon_.setAntiClockWise();
+    polygon_2.setAntiClockWise();
+
+    std::cout << "clockWise :" << polygon_.isClockWise() << std::endl;
+
+    std::vector<EasyPolygon2D> union_polygon_vec;
+
+    mask.getUnionPolygonVec(
+        polygon_,
+        polygon_2,
+        union_polygon_vec);
 
     exit(0);
 
@@ -658,11 +669,11 @@ bool OpenGL_Auto_Obj_Masker::getPolygon(
 
 bool OpenGL_Auto_Obj_Masker::getPolygonVec(
     const std::vector<EasyMesh2D> &mesh_2d_vec,
-    std::vector<EasyPolygon> &polygon_vec)
+    std::vector<EasyPolygon2D> &polygon_vec)
 {
     polygon_vec.resize(mesh_2d_vec.size());
 
-    for(int i = 0; i < mesh_2d_vec.size(); ++i)
+    for(size_t i = 0; i < mesh_2d_vec.size(); ++i)
     {
         getPolygon(mesh_2d_vec[i], polygon_vec[i]);
     }

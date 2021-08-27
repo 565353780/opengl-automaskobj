@@ -186,8 +186,8 @@ bool EasyMesh2D::addFace(
 }
 
 bool EasyMesh2D::addVertexNeighboor(
-    const int &vertex_idx_1,
-    const int &vertex_idx_2)
+    const size_t &vertex_idx_1,
+    const size_t &vertex_idx_2)
 {
     if(vertex_idx_1 < first_vertex_idx || vertex_idx_1 >= vertex_2d_list.size() + first_vertex_idx)
     {
@@ -215,10 +215,10 @@ bool EasyMesh2D::addVertexNeighboor(
 }
 
 bool EasyMesh2D::addFaceNeighboor(
-    const int &face_idx_1,
-    const int &face_idx_2)
+    const size_t &face_idx_1,
+    const size_t &face_idx_2)
 {
-    if(face_idx_1 < 0 || face_idx_1 >= face_2d_list.size())
+    if(face_idx_1 >= face_2d_list.size())
     {
         std::cout << "Add Neighboor failed! Face 1 idx out of range" << std::endl;
         std::cout << "valid value must in [" <<
@@ -227,7 +227,7 @@ bool EasyMesh2D::addFaceNeighboor(
         std::cout << "current value is " << face_idx_1 << std::endl;
         return false;
     }
-    if(face_idx_2 < 0 || face_idx_2 >= face_2d_list.size())
+    if(face_idx_2 >= face_2d_list.size())
     {
         std::cout << "Add Neighboor failed! Face 2 idx out of range" << std::endl;
         std::cout << "valid value must in [" <<
