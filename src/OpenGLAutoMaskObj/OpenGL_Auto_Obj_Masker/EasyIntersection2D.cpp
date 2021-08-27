@@ -20,11 +20,21 @@ bool EasyIntersection2D::addPolygonIdx(
     const size_t &polygon_id,
     const size_t &line_idx)
 {
-    std::pair<size_t, size_t> polygon_idx_pair;
-    polygon_idx_pair.first = polygon_id;
-    polygon_idx_pair.second = line_idx;
+    for(const std::pair<size_t, size_t> polygon_idx_pair :
+        polygon_idx_pair_vec)
+    {
+        if(polygon_idx_pair.first == polygon_id &&
+            polygon_idx_pair.second == line_idx)
+        {
+            return true;
+        }
+    }
 
-    polygon_idx_pair_vec.emplace_back(polygon_idx_pair);
+    std::pair<size_t, size_t> new_polygon_idx_pair;
+    new_polygon_idx_pair.first = polygon_id;
+    new_polygon_idx_pair.second = line_idx;
+
+    polygon_idx_pair_vec.emplace_back(new_polygon_idx_pair);
 
     return true;
 }

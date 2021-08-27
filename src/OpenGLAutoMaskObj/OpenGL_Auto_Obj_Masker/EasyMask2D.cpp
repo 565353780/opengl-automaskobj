@@ -35,19 +35,14 @@ bool EasyMask2D::getUnionPolygonVec(
     std::vector<bool> intersection_connected_vec;
     polygon_1_line_connected_vec.resize(polygon_1.point_list.size(), false);
     polygon_2_line_connected_vec.resize(polygon_2.point_list.size(), false);
-    intersection_connected_vec.resize(intersection_vec.size(), false);
 
     int connected_polygon_line_num = 0;
     int total_polygon_line_num =
       polygon_1.line_list.size() +
-      polygon_2.line_list.size() +
-      intersection_vec.size();
+      polygon_2.line_list.size();
 
     while(connected_polygon_line_num < total_polygon_line_num)
     {
-        std::cout << connected_polygon_line_num << "/" <<
-          total_polygon_line_num << std::endl;
-
         EasyPolygon2D current_union_polygon;
 
         float x_min = polygon_1.line_list[0].point_1.x;
@@ -92,6 +87,44 @@ bool EasyMask2D::getUnionPolygonVec(
             }
         }
 
+        // std::cout << "current polygon_1 :" << std::endl <<
+          // "points :" << std::endl;
+        // for(int i = 0; i < polygon_1.point_list.size(); ++i)
+        // {
+            // std::cout << "\t" << i << " : [" <<
+              // polygon_1.point_list[i].x << "," <<
+              // polygon_1.point_list[i].y << "]" << std::endl;
+        // }
+        // std::cout << "current polygon_2 :" << std::endl <<
+          // "points :" << std::endl;
+        // for(int i = 0; i < polygon_2.point_list.size(); ++i)
+        // {
+            // std::cout << "\t" << i << " : [" <<
+              // polygon_2.point_list[i].x << "," <<
+              // polygon_2.point_list[i].y << "]" << std::endl;
+        // }
+        // std::cout << "current intersection:" << std::endl;
+        // for(int i = 0; i < intersection_vec.size(); ++i)
+        // {
+            // std::cout << "points :" << std::endl;
+            // std::cout << "\t" << i << " : [" <<
+              // intersection_vec[i].point.x << "," <<
+              // intersection_vec[i].point.y << "]" << std::endl;
+            // std::cout << "idx :" << std::endl;
+            // for(int j = 0;
+                // j < intersection_vec[i].polygon_idx_pair_vec.size();
+                // ++j)
+            // {
+                // std::cout << "\t" << j << " : [" <<
+                  // intersection_vec[i].polygon_idx_pair_vec[j].first <<
+                  // "," <<
+                  // intersection_vec[i].polygon_idx_pair_vec[j].second <<
+                  // "]" << std::endl;
+            // }
+        // }
+
+        int start_line_idx = current_start_line_idx;
+
         addNewPolygonPoint(
             polygon_1,
             polygon_2,
@@ -112,18 +145,45 @@ bool EasyMask2D::getUnionPolygonVec(
             polygon_2,
             intersection_vec,
             current_start_polygon_id,
-            current_start_line_idx,
+            start_line_idx,
             current_start_polygon_id,
             current_start_line_idx,
             current_start_intersection_idx,
             current_union_polygon,
             polygon_1_line_connected_vec,
-            polygon_2_line_connected_vec,
-            intersection_connected_vec);
+            polygon_2_line_connected_vec);
+
+        current_union_polygon.update();
 
         union_polygon_vec.emplace_back(current_union_polygon);
 
-        connected_polygon_line_num += current_union_polygon.point_list.size();
+        // std::cout << "current union_polygon:" << std::endl <<
+          // "points :" << std::endl;
+        // for(int i = 0; i < current_union_polygon.point_list.size(); ++i)
+        // {
+            // std::cout << "\t" << i << " : [" <<
+              // current_union_polygon.point_list[i].x << "," <<
+              // current_union_polygon.point_list[i].y << "]" << std::endl;
+        // }
+
+        updateAllPolygonLineConnectedState(
+            polygon_1,
+            current_union_polygon,
+            polygon_1_line_connected_vec);
+        updateAllPolygonLineConnectedState(
+            polygon_2,
+            current_union_polygon,
+            polygon_2_line_connected_vec);
+
+        connected_polygon_line_num =
+          count(
+              polygon_1_line_connected_vec.begin(),
+              polygon_1_line_connected_vec.end(),
+              true) +
+          count(
+              polygon_2_line_connected_vec.begin(),
+              polygon_2_line_connected_vec.end(),
+              true);
     }
 
     return true;
@@ -227,9 +287,9 @@ float EasyMask2D::clockWiseAngle(
     const EasyLine2D &line_1,
     const EasyLine2D &line_2)
 {
-    if(cross(line_1, line_2) > 0)
+    if(cross(line_1, line_2) < 0)
     {
-        return 6.28 - angle(line_1, line_2);
+        return angle(line_1, line_2) + 6.28;
     }
 
     return angle(line_1, line_2);
@@ -615,8 +675,6 @@ bool EasyMask2D::getPolygonIntersection(
         return true;
     }
 
-    polygon_1.updateLineVec();
-    polygon_2.updateLineVec();
 
     for(size_t i = 0; i < polygon_1.line_list.size(); ++i)
     {
@@ -699,6 +757,69 @@ bool EasyMask2D::getIntersectionIdxVecOnPolygonLine(
     return true;
 }
 
+bool EasyMask2D::updateAllPolygonLineConnectedState(
+    const EasyPolygon2D &polygon,
+    const EasyPolygon2D &union_polygon,
+    std::vector<bool> &polygon_line_connected_vec)
+{
+    std::vector<bool> polygon_point_connected_vec;
+    std::vector<bool> polygon_point_computed_vec;
+    polygon_point_connected_vec.resize(polygon.point_list.size(), false);
+    polygon_point_computed_vec.resize(polygon.point_list.size(), false);
+
+    for(size_t i = 0; i < polygon.point_list.size(); ++i)
+    {
+        if(!polygon_line_connected_vec[i])
+        {
+            if(!polygon_point_computed_vec[i])
+            {
+                if(isPointInPolygon(
+                      polygon.point_list[i],
+                      union_polygon))
+                {
+                    polygon_point_connected_vec[i] = true;
+                }
+                polygon_point_computed_vec[i] = true;
+            }
+
+            size_t next_point_idx = i + 1;
+            if(i == polygon.point_list.size() - 1)
+            {
+                next_point_idx = 0;
+            }
+
+            if(!polygon_point_computed_vec[next_point_idx])
+            {
+                if(isPointInPolygon(
+                      polygon.point_list[next_point_idx],
+                      union_polygon))
+                {
+                    polygon_point_connected_vec[next_point_idx] = true;
+                }
+                polygon_point_computed_vec[next_point_idx] = true;
+            }
+        }
+    }
+
+    for(size_t i = 0; i < polygon_line_connected_vec.size(); ++i)
+    {
+        if(!polygon_line_connected_vec[i])
+        {
+            size_t next_point_idx = i + 1;
+            if(i == polygon_line_connected_vec.size())
+            {
+                i = 0;
+            }
+            if(polygon_point_connected_vec[i] &&
+                polygon_point_connected_vec[next_point_idx])
+            {
+                polygon_line_connected_vec[i] = true;
+            }
+        }
+    }
+    return true;
+}
+
 bool EasyMask2D::addNewPolygonPoint(
     const EasyPolygon2D &polygon_1,
     const EasyPolygon2D &polygon_2,
@@ -710,7 +831,7 @@ bool EasyMask2D::addNewPolygonPoint(
 {
     if(polygon_id == polygon_1.id)
     {
-        union_polygon.addPoint(polygon_1.line_list[start_line_idx].point_2);
+        union_polygon.addPoint(polygon_1.line_list[start_line_idx].point_1);
         polygon_1_line_connected_vec[start_line_idx] = true;
 
         return true;
@@ -718,7 +839,7 @@ bool EasyMask2D::addNewPolygonPoint(
 
     if(polygon_id == polygon_2.id)
     {
-        union_polygon.addPoint(polygon_2.line_list[start_line_idx].point_2);
+        union_polygon.addPoint(polygon_2.line_list[start_line_idx].point_1);
         polygon_2_line_connected_vec[start_line_idx] = true;
 
         return true;
@@ -784,25 +905,28 @@ bool EasyMask2D::getNearestIntersectionIdx(
         std::cout << "EasyMask2D::getNearestIntersectionIdx : no intersection!" << std::endl;
         return false;
     }
-    float min_dist_to_intersection;
+
+    float min_dist_to_intersection = -1;
+
     if(polygon_id == polygon_1.id)
     {
-        min_dist_to_intersection = pointDist2(
-            intersection_vec[intersection_idx_vec[0]].point,
-            polygon_1.line_list[start_line_idx].point_1);
-        nearest_intersection_idx = 0;
-
-        for(size_t i = 1; i < intersection_idx_vec.size(); ++i)
+        for(size_t i = 0; i < intersection_idx_vec.size(); ++i)
         {
             float current_min_dist =
               pointDist2(
                   intersection_vec[intersection_idx_vec[i]].point,
                   polygon_1.line_list[start_line_idx].point_1);
 
-            if(current_min_dist < min_dist_to_intersection)
+            if(current_min_dist == 0)
+            {
+                continue;
+            }
+
+            if(min_dist_to_intersection == -1 ||
+                current_min_dist < min_dist_to_intersection)
             {
                 min_dist_to_intersection = current_min_dist;
-                nearest_intersection_idx = i;
+                nearest_intersection_idx = intersection_idx_vec[i];
             }
         }
 
@@ -811,22 +935,23 @@ bool EasyMask2D::getNearestIntersectionIdx(
 
     if(polygon_id == polygon_2.id)
     {
-        min_dist_to_intersection = pointDist2(
-            intersection_vec[intersection_idx_vec[0]].point,
-            polygon_2.line_list[start_line_idx].point_1);
-        nearest_intersection_idx = 0;
-
-        for(size_t i = 1; i < intersection_idx_vec.size(); ++i)
+        for(size_t i = 0; i < intersection_idx_vec.size(); ++i)
         {
             float current_min_dist =
               pointDist2(
                   intersection_vec[intersection_idx_vec[i]].point,
                   polygon_2.line_list[start_line_idx].point_1);
 
-            if(current_min_dist < min_dist_to_intersection)
+            if(current_min_dist == 0)
+            {
+                continue;
+            }
+
+            if(min_dist_to_intersection == -1 ||
+                current_min_dist < min_dist_to_intersection)
             {
                 min_dist_to_intersection = current_min_dist;
-                nearest_intersection_idx = i;
+                nearest_intersection_idx = intersection_idx_vec[i];
             }
         }
 
@@ -879,10 +1004,8 @@ bool EasyMask2D::getMinimalAnglePolygonPointIdx(
             line_intersection_to_polygon_line_point_2.setPosition(
                 intersection_vec[start_intersection_idx].point,
                 polygon_1.line_list[polygon_idx_pair.second].point_2);
-
-            
         }
-        else if(polygon_idx_pair.second == polygon_2.id)
+        else if(polygon_idx_pair.first == polygon_2.id)
         {
             line_intersection_to_polygon_line_point_2.setPosition(
                 intersection_vec[start_intersection_idx].point,
@@ -897,18 +1020,6 @@ bool EasyMask2D::getMinimalAnglePolygonPointIdx(
             line_intersection_to_polygon_line_point_1,
             line_intersection_to_polygon_line_point_2);
 
-        std::cout << "line1 : " <<
-          line_intersection_to_polygon_line_point_1.point_1.x << "," <<
-          line_intersection_to_polygon_line_point_1.point_1.y << "->" <<
-          line_intersection_to_polygon_line_point_1.point_2.x << "," <<
-          line_intersection_to_polygon_line_point_1.point_2.y << std::endl;
-        std::cout << "line2 : " <<
-          line_intersection_to_polygon_line_point_2.point_1.x << "," <<
-          line_intersection_to_polygon_line_point_2.point_1.y << "->" <<
-          line_intersection_to_polygon_line_point_2.point_2.x << "," <<
-          line_intersection_to_polygon_line_point_2.point_2.y << std::endl;
-        std::cout << "angle : " << current_angle << std::endl;
-
         if(current_angle == 0)
         {
             continue;
@@ -921,7 +1032,6 @@ bool EasyMask2D::getMinimalAnglePolygonPointIdx(
             minimal_angle_polygon_point_idx.second = polygon_idx_pair.second;
         }
     }
-    exit(0);
 
     return true;
 }
@@ -937,16 +1047,37 @@ bool EasyMask2D::getUnionPolygonPoints(
     const int &current_start_intersection_idx,
     EasyPolygon2D &union_polygon,
     std::vector<bool> &polygon_1_line_connected_vec,
-    std::vector<bool> &polygon_2_line_connected_vec,
-    std::vector<bool> &intersection_connected_vec)
+    std::vector<bool> &polygon_2_line_connected_vec)
 {
     int new_start_polygon_id = current_start_polygon_id;
     int new_start_line_idx = current_start_line_idx;
     int new_start_intersection_idx = current_start_intersection_idx;
 
+    if(new_start_polygon_id == start_polygon_id &&
+        new_start_line_idx == start_line_idx)
+    {
+        return true;
+    }
+
+    if(new_start_polygon_id == -1 ||
+        new_start_line_idx == -1)
+    {
+        std::cout << "force exit!" << std::endl;
+        exit(0);
+    }
+
     if(new_start_intersection_idx == -1)
     {
         std::vector<size_t> intersection_idx_vec;
+
+        addNewPolygonPoint(
+            polygon_1,
+            polygon_2,
+            new_start_polygon_id,
+            new_start_line_idx,
+            union_polygon,
+            polygon_1_line_connected_vec,
+            polygon_2_line_connected_vec);
 
         getIntersectionIdxVecOnPolygonLine(
             intersection_vec,
@@ -956,31 +1087,11 @@ bool EasyMask2D::getUnionPolygonPoints(
 
         if(intersection_idx_vec.size() == 0)
         {
-            addNewPolygonPoint(
-                polygon_1,
-                polygon_2,
-                new_start_polygon_id,
-                new_start_line_idx,
-                union_polygon,
-                polygon_1_line_connected_vec,
-                polygon_2_line_connected_vec);
-
             startLineIdxAdd1(
                 polygon_1,
                 polygon_2,
                 new_start_polygon_id,
                 new_start_line_idx);
-
-            std::cout << "go to next line :" <<
-              " polygon : " << new_start_polygon_id <<
-              " line_idx : " << new_start_line_idx <<
-              " intersection : " << new_start_intersection_idx << std::endl;
-
-            if(new_start_polygon_id == start_polygon_id &&
-                new_start_line_idx == start_line_idx)
-            {
-                return true;
-            }
 
             return getUnionPolygonPoints(
                 polygon_1,
@@ -993,8 +1104,7 @@ bool EasyMask2D::getUnionPolygonPoints(
                 new_start_intersection_idx,
                 union_polygon,
                 polygon_1_line_connected_vec,
-                polygon_2_line_connected_vec,
-                intersection_connected_vec);
+                polygon_2_line_connected_vec);
         }
 
         getNearestIntersectionIdx(
@@ -1006,15 +1116,16 @@ bool EasyMask2D::getUnionPolygonPoints(
             intersection_idx_vec,
             new_start_intersection_idx);
 
+        if(haveThisPolygonIdx(
+              intersection_vec[new_start_intersection_idx],
+              start_polygon_id,
+              start_line_idx))
+        {
+            return true;
+        }
+
         union_polygon.addPoint(
             intersection_vec[new_start_intersection_idx].point);
-
-        intersection_connected_vec[new_start_intersection_idx] = true;
-
-        std::cout << "go to an intersection" <<
-          " polygon : " << new_start_polygon_id <<
-          " line_idx : " << new_start_line_idx <<
-          " intersection : " << new_start_intersection_idx << std::endl;
 
         return getUnionPolygonPoints(
             polygon_1,
@@ -1027,8 +1138,7 @@ bool EasyMask2D::getUnionPolygonPoints(
             new_start_intersection_idx,
             union_polygon,
             polygon_1_line_connected_vec,
-            polygon_2_line_connected_vec,
-            intersection_connected_vec);
+            polygon_2_line_connected_vec);
     }
 
     std::pair<int, int> minimal_angle_polygon_point_idx_pair;
@@ -1045,22 +1155,17 @@ bool EasyMask2D::getUnionPolygonPoints(
     new_start_line_idx = minimal_angle_polygon_point_idx_pair.second;
     new_start_intersection_idx = -1;
 
-    startLineIdxAdd1(
-        polygon_1,
-        polygon_2,
-        new_start_polygon_id,
-        new_start_line_idx);
-
-    std::cout << "from intersection go to next line" <<
-          " polygon : " << new_start_polygon_id <<
-          " line_idx : " << new_start_line_idx <<
-          " intersection : " << new_start_intersection_idx << std::endl;
-
     if(new_start_polygon_id == start_polygon_id &&
         new_start_line_idx == start_line_idx)
     {
         return true;
     }
+
+    startLineIdxAdd1(
+        polygon_1,
+        polygon_2,
+        new_start_polygon_id,
+        new_start_line_idx);
 
     return getUnionPolygonPoints(
         polygon_1,
@@ -1073,8 +1178,7 @@ bool EasyMask2D::getUnionPolygonPoints(
         new_start_intersection_idx,
         union_polygon,
         polygon_1_line_connected_vec,
-        polygon_2_line_connected_vec,
-        intersection_connected_vec);
+        polygon_2_line_connected_vec);
 
     return true;
 }

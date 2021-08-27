@@ -34,6 +34,8 @@ public:
     bool removePoint(
         const size_t &remove_idx);
 
+    bool update();
+
     bool updateLineVec();
 
     bool isClockWise();

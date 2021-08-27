@@ -2,6 +2,7 @@
 #define EASYMASK2D_H
 
 #include <iostream>
+#include <limits.h>
 
 #include "EasyPoint2D.h"
 #include "EasyRect2D.h"
@@ -130,6 +131,11 @@ public:
         const size_t &line_idx,
         std::vector<size_t> &intersection_idx_vec);
 
+    bool updateAllPolygonLineConnectedState(
+        const EasyPolygon2D &polygon,
+        const EasyPolygon2D &union_polygon,
+        std::vector<bool> &polygon_line_connected_vec);
+
     bool addNewPolygonPoint(
         const EasyPolygon2D &polygon_1,
         const EasyPolygon2D &polygon_2,
@@ -174,8 +180,7 @@ public:
         const int &current_start_intersection_idx,
         EasyPolygon2D &union_polygon,
         std::vector<bool> &polygon_1_line_connected_vec,
-        std::vector<bool> &polygon_2_line_connected_vec,
-        std::vector<bool> &intersection_connected_vec);
+        std::vector<bool> &polygon_2_line_connected_vec);
 
 private:
     std::vector<EasyPolygon2D> polygon_list;

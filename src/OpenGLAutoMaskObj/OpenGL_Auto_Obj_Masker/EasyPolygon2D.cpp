@@ -54,6 +54,14 @@ bool EasyPolygon2D::removePoint(
     return true;
 }
 
+bool EasyPolygon2D::update()
+{
+    setAntiClockWise();
+    updateLineVec();
+
+    return true;
+}
+
 bool EasyPolygon2D::updateLineVec()
 {
     line_list.resize(point_list.size());
@@ -82,7 +90,7 @@ bool EasyPolygon2D::updateLineVec()
 
 bool EasyPolygon2D::isClockWise()
 {
-    if(getPolygonArea() > 0)
+    if(getPolygonArea() < 0)
     {
         return true;
     }
