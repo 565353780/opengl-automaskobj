@@ -45,44 +45,64 @@ bool EasyMask2D::getUnionPolygonVec(
     {
         EasyPolygon2D current_union_polygon;
 
-        float x_min = polygon_1.line_list[0].point_1.x;
-        float x_min_2 = polygon_1.line_list[0].point_2.x;
-        int current_start_polygon_id = polygon_1.id;
-        int current_start_line_idx = 0;
+        float x_min;
+        float x_min_2;
+        int current_start_polygon_id = -1;
+        int current_start_line_idx = -1;
         int current_start_intersection_idx = -1;
-        for(size_t i = 1; i < polygon_1.line_list.size(); ++i)
+        for(size_t i = 0; i < polygon_1.line_list.size(); ++i)
         {
-            if(polygon_1.line_list[i].point_1.x < x_min)
+            if(!polygon_1_line_connected_vec[i])
             {
-                x_min = polygon_1.line_list[i].point_1.x;
-                current_start_polygon_id = polygon_1.id;
-                current_start_line_idx = i;
-            }
-            else if(polygon_1.line_list[i].point_1.x == x_min)
-            {
-                if(polygon_1.line_list[i].point_2.x < x_min_2)
+                if(current_start_polygon_id == -1)
                 {
+                    x_min = polygon_1.line_list[i].point_1.x;
                     x_min_2 = polygon_1.line_list[i].point_2.x;
                     current_start_polygon_id = polygon_1.id;
                     current_start_line_idx = i;
+                }
+                else if(polygon_1.line_list[i].point_1.x < x_min)
+                {
+                    x_min = polygon_1.line_list[i].point_1.x;
+                    current_start_polygon_id = polygon_1.id;
+                    current_start_line_idx = i;
+                }
+                else if(polygon_1.line_list[i].point_1.x == x_min)
+                {
+                    if(polygon_1.line_list[i].point_2.x < x_min_2)
+                    {
+                        x_min_2 = polygon_1.line_list[i].point_2.x;
+                        current_start_polygon_id = polygon_1.id;
+                        current_start_line_idx = i;
+                    }
                 }
             }
         }
         for(size_t i = 0; i < polygon_2.line_list.size(); ++i)
         {
-            if(polygon_2.line_list[i].point_1.x < x_min)
+            if(!polygon_2_line_connected_vec[i])
             {
-                x_min = polygon_2.line_list[i].point_1.x;
-                current_start_polygon_id = polygon_2.id;
-                current_start_line_idx = i;
-            }
-            else if(polygon_2.line_list[i].point_1.x == x_min)
-            {
-                if(polygon_2.line_list[i].point_2.x < x_min_2)
+                if(current_start_polygon_id == -1)
                 {
+                    x_min = polygon_2.line_list[i].point_1.x;
                     x_min_2 = polygon_2.line_list[i].point_2.x;
                     current_start_polygon_id = polygon_2.id;
                     current_start_line_idx = i;
+                }
+                if(polygon_2.line_list[i].point_1.x < x_min)
+                {
+                    x_min = polygon_2.line_list[i].point_1.x;
+                    current_start_polygon_id = polygon_2.id;
+                    current_start_line_idx = i;
+                }
+                else if(polygon_2.line_list[i].point_1.x == x_min)
+                {
+                    if(polygon_2.line_list[i].point_2.x < x_min_2)
+                    {
+                        x_min_2 = polygon_2.line_list[i].point_2.x;
+                        current_start_polygon_id = polygon_2.id;
+                        current_start_line_idx = i;
+                    }
                 }
             }
         }
@@ -157,14 +177,14 @@ bool EasyMask2D::getUnionPolygonVec(
 
         union_polygon_vec.emplace_back(current_union_polygon);
 
-        // std::cout << "current union_polygon:" << std::endl <<
-          // "points :" << std::endl;
-        // for(int i = 0; i < current_union_polygon.point_list.size(); ++i)
-        // {
-            // std::cout << "\t" << i << " : [" <<
-              // current_union_polygon.point_list[i].x << "," <<
-              // current_union_polygon.point_list[i].y << "]" << std::endl;
-        // }
+        std::cout << "current union_polygon:" << std::endl <<
+          "points :" << std::endl;
+        for(int i = 0; i < current_union_polygon.point_list.size(); ++i)
+        {
+            std::cout << "\t" << i << " : [" <<
+              current_union_polygon.point_list[i].x << "," <<
+              current_union_polygon.point_list[i].y << "]" << std::endl;
+        }
 
         updateAllPolygonLineConnectedState(
             polygon_1,
