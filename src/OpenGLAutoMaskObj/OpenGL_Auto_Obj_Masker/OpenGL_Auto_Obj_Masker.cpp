@@ -642,7 +642,7 @@ bool OpenGL_Auto_Obj_Masker::getPolygon(
     polygon_2.setID(1);
 
     EasyPoint2D p12, p22, p32, p42;
-    p12.setPosition(0.5, 0.5);
+    p12.setPosition(0, 0);
     p22.setPosition(0.5, 1.5);
     p32.setPosition(1.5, 1.5);
     p42.setPosition(1.5, 0.5);

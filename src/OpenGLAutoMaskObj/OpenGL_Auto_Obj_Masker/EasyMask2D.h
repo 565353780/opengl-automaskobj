@@ -120,6 +120,10 @@ public:
         EasyPolygon2D &polygon_2,
         std::vector<EasyIntersection2D> &intersection_vec);
 
+    bool splitPolygonByIntersection(
+        std::vector<EasyIntersection2D> &intersection_vec,
+        EasyPolygon2D &polygon);
+
     bool haveThisPolygonIdx(
         const EasyIntersection2D &intersection_2d,
         const size_t &polygon_id,

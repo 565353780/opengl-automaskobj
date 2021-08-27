@@ -24,6 +24,7 @@ SOURCES += \
     OpenGL_Auto_Obj_Masker/EasyLine2D.cpp \
     OpenGL_Auto_Obj_Masker/EasyIntersection2D.cpp \
     OpenGL_Auto_Obj_Masker/EasyPolygon2D.cpp \
+    OpenGL_Auto_Obj_Masker/Intersection2DManager.cpp \
     OpenGL_Auto_Obj_Masker/EasyMask2D.cpp
 
 HEADERS += \
@@ -36,6 +37,7 @@ HEADERS += \
     OpenGL_Auto_Obj_Masker/EasyLine2D.h \
     OpenGL_Auto_Obj_Masker/EasyIntersection2D.h \
     OpenGL_Auto_Obj_Masker/EasyPolygon2D.h \
+    OpenGL_Auto_Obj_Masker/Intersection2DManager.h \
     OpenGL_Auto_Obj_Masker/EasyMask2D.h
 
 # Q3D
