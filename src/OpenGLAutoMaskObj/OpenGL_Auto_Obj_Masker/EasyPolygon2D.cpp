@@ -3,16 +3,6 @@
 bool EasyPolygon2D::reset()
 {
     point_list.clear();
-    line_list.clear();
-    id = -1;
-
-    return true;
-}
-
-bool EasyPolygon2D::setID(
-    const int &id_data)
-{
-    id = id_data;
 
     return true;
 }
@@ -50,40 +40,6 @@ bool EasyPolygon2D::removePoint(
     }
 
     point_list.erase(point_list.begin() + remove_idx);
-
-    return true;
-}
-
-bool EasyPolygon2D::update()
-{
-    setAntiClockWise();
-    updateLineVec();
-
-    return true;
-}
-
-bool EasyPolygon2D::updateLineVec()
-{
-    line_list.resize(point_list.size());
-
-    if(point_list.size() == 0)
-    {
-        return true;
-    }
-
-    for(size_t i = 0; i < point_list.size(); ++i)
-    {
-        int next_point_idx = i + 1;
-        if(i == point_list.size() - 1)
-        {
-            next_point_idx = 0;
-        }
-
-        EasyLine2D new_line;
-        line_list[i].setPosition(
-            point_list[i],
-            point_list[next_point_idx]);
-    }
 
     return true;
 }

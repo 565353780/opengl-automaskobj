@@ -623,7 +623,6 @@ bool OpenGL_Auto_Obj_Masker::getPolygon(
     EasyMask2D mask;
 
     EasyPolygon2D polygon_;
-    polygon_.setID(0);
 
     EasyPoint2D p1, p2, p3, p4;
     p1.setPosition(0, 0);
@@ -636,29 +635,31 @@ bool OpenGL_Auto_Obj_Masker::getPolygon(
     polygon_.addPoint(p3);
     polygon_.addPoint(p4);
 
-    polygon_.update();
+    polygon_.setAntiClockWise();
 
     EasyPolygon2D polygon_2;
-    polygon_2.setID(1);
 
     EasyPoint2D p12, p22, p32, p42;
-    p12.setPosition(0, 0);
-    p22.setPosition(0.5, 1.5);
-    p32.setPosition(1.5, 1.5);
-    p42.setPosition(1.5, 0.5);
+    p12.setPosition(0, -1);
+    p22.setPosition(1.1, 0.5);
+    p32.setPosition(0.5, 1.1);
+    p42.setPosition(-1, 0);
 
     polygon_2.addPoint(p12);
     polygon_2.addPoint(p22);
     polygon_2.addPoint(p32);
     polygon_2.addPoint(p42);
 
-    polygon_2.update();
+    polygon_2.setAntiClockWise();
+
+    std::vector<EasyPolygon2D> polygon_vec;
+    polygon_vec.emplace_back(polygon_);
+    polygon_vec.emplace_back(polygon_2);
 
     std::vector<EasyPolygon2D> union_polygon_vec;
 
     mask.getUnionPolygonVec(
-        polygon_,
-        polygon_2,
+        polygon_vec,
         union_polygon_vec);
 
     exit(0);

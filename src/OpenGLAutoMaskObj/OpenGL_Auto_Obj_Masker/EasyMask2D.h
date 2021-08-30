@@ -18,8 +18,7 @@ public:
     }
 
     bool getUnionPolygonVec(
-        EasyPolygon2D &polygon_1,
-        EasyPolygon2D &polygon_2,
+        std::vector<EasyPolygon2D> &polygon_vec,
         std::vector<EasyPolygon2D> &union_polygon_vec);
 
 // private:
@@ -61,7 +60,11 @@ public:
         const EasyLine2D &line_1,
         const EasyLine2D &line_2);
 
-    float clockWiseAngle(
+    float getClockWiseAngle(
+        const EasyLine2D &line_1,
+        const EasyLine2D &line_2);
+
+    float getAntiClockWiseAngle(
         const EasyLine2D &line_1,
         const EasyLine2D &line_2);
 
@@ -116,78 +119,72 @@ public:
         const EasyPoint2D &point_2);
 
     bool getPolygonIntersection(
-        EasyPolygon2D &polygon_1,
-        EasyPolygon2D &polygon_2,
+        std::vector<EasyPolygon2D> &polygon_vec,
         std::vector<EasyIntersection2D> &intersection_vec);
 
-    bool splitPolygonByIntersection(
-        std::vector<EasyIntersection2D> &intersection_vec,
-        EasyPolygon2D &polygon);
-
-    bool haveThisPolygonIdx(
-        const EasyIntersection2D &intersection_2d,
-        const size_t &polygon_id,
-        const size_t &line_idx);
-
-    bool getIntersectionIdxVecOnPolygonLine(
-        const std::vector<EasyIntersection2D> &intersection_vec,
-        const size_t &polygon_id,
-        const size_t &line_idx,
-        std::vector<size_t> &intersection_idx_vec);
-
-    bool updateAllPolygonLineConnectedState(
+    bool getSortedIntersectionOnPolygonLine(
         const EasyPolygon2D &polygon,
+        const std::vector<EasyIntersection2D> &intersection_vec,
+        const size_t &polygon_idx,
+        const size_t &point_idx,
+        std::vector<size_t> &sorted_intersection_idx_on_polygon_line_vec);
+
+    bool getSplitPolygonAndIntersectionPosition(
+        const EasyPolygon2D &polygon,
+        const std::vector<EasyIntersection2D> &intersection_vec,
+        const size_t &polygon_idx,
+        EasyPolygon2D &split_polygon,
+        std::vector<std::pair<size_t, size_t>> &intersection_idx_polygon_point_idx_pair_vec);
+
+    bool splitPolygonsByIntersection(
+        const std::vector<EasyIntersection2D> &intersection_vec,
+        const std::vector<EasyPolygon2D> &polygon_vec,
+        std::vector<EasyIntersection2D> &split_intersection_vec,
+        std::vector<EasyPolygon2D> &split_polygon_vec);
+
+    bool getIntersectionIdxOnPolygonPoint(
+        const std::vector<EasyPolygon2D> &polygon_vec,
+        const std::vector<EasyIntersection2D> &intersection_vec,
+        const size_t &polygon_idx,
+        const size_t &point_idx,
+        size_t &intersection_idx);
+
+    bool updatePolygonIntersectionPointConnectedState(
+        const EasyIntersection2D &intersection,
+        std::vector<std::vector<bool>> &polygon_point_connected_vec_vec);
+
+    bool updatePolygonNotIntersectionPointConnectedState(
+        const std::vector<EasyPolygon2D> &polygon_vec,
         const EasyPolygon2D &union_polygon,
-        std::vector<bool> &polygon_line_connected_vec);
+        std::vector<std::vector<bool>> &polygon_point_connected_vec_vec);
 
     bool addNewPolygonPoint(
-        const EasyPolygon2D &polygon_1,
-        const EasyPolygon2D &polygon_2,
-        const int &polygon_id,
-        const int &start_line_idx,
+        const std::vector<EasyPolygon2D> &polygon_vec,
+        const size_t &polygon_idx,
+        const size_t &start_point_idx,
         EasyPolygon2D &union_polygon,
-        std::vector<bool> &polygon_1_line_connected_vec,
-        std::vector<bool> &polygon_2_line_connected_vec);
-
-    bool startLineIdxAdd1(
-        const EasyPolygon2D &polygon_1,
-        const EasyPolygon2D &polygon_2,
-        const int &polygon_id,
-        int &start_line_idx);
-
-    bool getNearestIntersectionIdx(
-        const EasyPolygon2D &polygon_1,
-        const EasyPolygon2D &polygon_2,
-        const std::vector<EasyIntersection2D> &intersection_vec,
-        const int &polygon_id,
-        const int &start_line_idx,
-        const std::vector<size_t> &intersection_idx_vec,
-        int &nearest_intersection_idx);
+        std::vector<std::vector<bool>> &polygon_point_connected_vec_vec);
 
     bool getMinimalAnglePolygonPointIdx(
-        const EasyPolygon2D &polygon_1,
-        const EasyPolygon2D &polygon_2,
+        const std::vector<EasyPolygon2D> &polygon_vec,
         const std::vector<EasyIntersection2D> &intersection_vec,
-        const int &polygon_id,
-        const int &start_line_idx,
-        const int &start_intersection_idx,
-        std::pair<int, int> &minimal_angle_polygon_point_idx);
+        const size_t &polygon_idx,
+        const size_t &start_point_idx,
+        const size_t &start_intersection_idx,
+        std::pair<size_t, size_t> &minimal_angle_polygon_point_idx);
 
     bool getUnionPolygonPoints(
-        const EasyPolygon2D &polygon_1,
-        const EasyPolygon2D &polygon_2,
+        const std::vector<EasyPolygon2D> &polygon_vec,
         const std::vector<EasyIntersection2D> &intersection_vec,
-        const int &start_polygon_id,
-        const int &start_line_idx,
-        const int &current_start_polygon_id,
-        const int &current_start_line_idx,
-        const int &current_start_intersection_idx,
+        const size_t &start_polygon_idx,
+        const size_t &start_point_idx,
+        const size_t &current_start_polygon_idx,
+        const size_t &current_start_point_idx,
         EasyPolygon2D &union_polygon,
-        std::vector<bool> &polygon_1_line_connected_vec,
-        std::vector<bool> &polygon_2_line_connected_vec);
+        std::vector<std::vector<bool>> &polygon_point_connected_vec_vec);
 
 private:
-    std::vector<EasyPolygon2D> polygon_list;
+    size_t connected_polygon_point_num_=0;
 };
 
 #endif //EASYMASK2D_H

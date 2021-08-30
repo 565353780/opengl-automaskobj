@@ -16,25 +16,44 @@ bool EasyIntersection2D::setPosition(
     return setPosition(point_data.x, point_data.y);
 }
 
-bool EasyIntersection2D::addPolygonIdx(
-    const size_t &polygon_id,
-    const size_t &line_idx)
+bool EasyIntersection2D::haveThisPointIdx(
+    const size_t &polygon_idx,
+    const size_t &point_idx) const
 {
-    for(const std::pair<size_t, size_t> polygon_idx_pair :
-        polygon_idx_pair_vec)
+    for(const std::pair<size_t, std::vector<size_t>> &polygon_point_idx_vec_pair :
+        polygon_point_idx_vec_pair_vec)
     {
-        if(polygon_idx_pair.first == polygon_id &&
-            polygon_idx_pair.second == line_idx)
+        if(polygon_point_idx_vec_pair.first != polygon_idx)
         {
-            return true;
+            continue;
+        }
+
+        for(const size_t &polygon_point_idx : polygon_point_idx_vec_pair.second)
+        {
+            if(polygon_point_idx == point_idx)
+            {
+                return true;
+            }
         }
     }
 
-    std::pair<size_t, size_t> new_polygon_idx_pair;
-    new_polygon_idx_pair.first = polygon_id;
-    new_polygon_idx_pair.second = line_idx;
+    return false;
+}
 
-    polygon_idx_pair_vec.emplace_back(new_polygon_idx_pair);
+bool EasyIntersection2D::addPolygonPointIdx(
+    const size_t &polygon_idx,
+    const size_t &point_idx)
+{
+    if(haveThisPointIdx(polygon_idx, point_idx))
+    {
+        return true;
+    }
+
+    std::pair<size_t, std::vector<size_t>> new_polygon_line_idx_pair;
+    new_polygon_line_idx_pair.first = polygon_idx;
+    new_polygon_line_idx_pair.second.emplace_back(point_idx);
+
+    polygon_point_idx_vec_pair_vec.emplace_back(new_polygon_line_idx_pair);
 
     return true;
 }

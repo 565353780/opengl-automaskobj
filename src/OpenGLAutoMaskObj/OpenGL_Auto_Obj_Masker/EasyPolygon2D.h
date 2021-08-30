@@ -34,10 +34,6 @@ public:
     bool removePoint(
         const size_t &remove_idx);
 
-    bool update();
-
-    bool updateLineVec();
-
     bool isClockWise();
 
     bool setClockWise();
@@ -49,10 +45,7 @@ public:
     bool getPolygonRect(
         EasyRect2D &rect_2d);
 
-    int id;
-
     std::vector<EasyPoint2D> point_list;
-    std::vector<EasyLine2D> line_list;
 };
 
 #endif //EASYPOLYGON_H
