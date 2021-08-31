@@ -616,53 +616,70 @@ bool OpenGL_Auto_Obj_Masker::splitMesh2D(
     return true;
 }
 
-bool OpenGL_Auto_Obj_Masker::getPolygon(
+bool OpenGL_Auto_Obj_Masker::getPolygonVec(
     const EasyMesh2D &mesh_2d,
-    EasyPolygon2D &polygon)
+    std::vector<EasyPolygon2D> &polygon_vec)
 {
+    polygon_vec.clear();
+
+    if(mesh_2d.face_2d_list.size() == 0)
+    {
+        return true;
+    }
+
     EasyMask2D mask;
 
-    EasyPolygon2D polygon_;
+    EasyPolygon2D current_polygon;
 
-    EasyPoint2D p1, p2, p3, p4;
-    p1.setPosition(0, 0);
-    p2.setPosition(0, 1);
-    p3.setPosition(1, 1);
-    p4.setPosition(1, 0);
+    for(const int face_vertex_idx : mesh_2d.face_2d_list[0].vertex_idx_vec)
+    {
+        EasyPoint2D face_vertex_point;
+        face_vertex_point.setPosition(
+            mesh_2d.vertex_2d_list[face_vertex_idx].x,
+            mesh_2d.vertex_2d_list[face_vertex_idx].y);
+        current_polygon.addPoint(face_vertex_point);
+    }
 
-    polygon_.addPoint(p1);
-    polygon_.addPoint(p2);
-    polygon_.addPoint(p3);
-    polygon_.addPoint(p4);
+    current_polygon.setAntiClockWise();
 
-    polygon_.setAntiClockWise();
+    if(mesh_2d.face_2d_list.size() == 1)
+    {
+        polygon_vec.emplace_back(current_polygon);
 
-    EasyPolygon2D polygon_2;
+        return true;
+    }
 
-    EasyPoint2D p12, p22, p32, p42;
-    p12.setPosition(0, -1);
-    p22.setPosition(1.1, 0.5);
-    p32.setPosition(0.5, 1.1);
-    p42.setPosition(-1, 0);
-
-    polygon_2.addPoint(p12);
-    polygon_2.addPoint(p22);
-    polygon_2.addPoint(p32);
-    polygon_2.addPoint(p42);
-
-    polygon_2.setAntiClockWise();
-
-    std::vector<EasyPolygon2D> polygon_vec;
-    polygon_vec.emplace_back(polygon_);
-    polygon_vec.emplace_back(polygon_2);
-
+    std::vector<EasyPolygon2D> current_polygon_vec;
     std::vector<EasyPolygon2D> union_polygon_vec;
 
-    mask.getUnionPolygonVec(
-        polygon_vec,
-        union_polygon_vec);
+    current_polygon_vec.emplace_back(current_polygon);
 
-    exit(0);
+    std::vector<bool> mesh_2d_face_connected_vec;
+    mesh_2d_face_connected_vec.resize(mesh_2d.face_2d_list.size(), false);
+
+    for(size_t i = 1; i < mesh_2d.face_2d_list.size(); ++i)
+    {
+        const std::vector<int> &face_vertex_idx_vec = mesh_2d.face_2d_list[i].vertex_idx_vec;
+
+        EasyPolygon2D new_polygon;
+
+        for(const int face_vertex_idx : face_vertex_idx_vec)
+        {
+            EasyPoint2D face_vertex_point;
+            face_vertex_point.setPosition(
+                mesh_2d.vertex_2d_list[face_vertex_idx].x,
+                mesh_2d.vertex_2d_list[face_vertex_idx].y);
+            new_polygon.addPoint(face_vertex_point);
+        }
+
+        new_polygon.setAntiClockWise();
+
+        std::vector<EasyPolygon2D> polygon_vec;
+        polygon_vec.emplace_back(current_polygon);
+        polygon_vec.emplace_back(new_polygon);
+
+        mask.getUnionPolygonVec(polygon_vec, union_polygon_vec);
+    }
 
     return true;
 }
@@ -673,9 +690,20 @@ bool OpenGL_Auto_Obj_Masker::getPolygonVec(
 {
     polygon_vec.resize(mesh_2d_vec.size());
 
+    if(mesh_2d_vec.size() == 0)
+    {
+        return true;
+    }
+
     for(size_t i = 0; i < mesh_2d_vec.size(); ++i)
     {
-        getPolygon(mesh_2d_vec[i], polygon_vec[i]);
+        std::vector<EasyPolygon2D> union_polygon_vec;
+        getPolygonVec(mesh_2d_vec[i], union_polygon_vec);
+
+        for(const EasyPolygon2D &union_polygon : union_polygon_vec)
+        {
+            polygon_vec.emplace_back(union_polygon);
+        }
     }
 
     return true;

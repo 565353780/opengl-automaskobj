@@ -118,9 +118,9 @@ private:
         const EasyMesh2D &mesh_2d,
         std::vector<EasyMesh2D> &mesh_2d_vec);
 
-    bool getPolygon(
+    bool getPolygonVec(
         const EasyMesh2D &mesh_2d,
-        EasyPolygon2D &polygon);
+        std::vector<EasyPolygon2D> &polygon_vec);
 
     bool getPolygonVec(
         const std::vector<EasyMesh2D> &mesh_2d_vec,
