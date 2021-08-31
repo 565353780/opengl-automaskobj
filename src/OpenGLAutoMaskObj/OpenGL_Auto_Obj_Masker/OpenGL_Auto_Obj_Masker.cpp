@@ -333,8 +333,6 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(
             ++solved_obj_num;
             ++current_image_idx;
 
-            size_t current_label_idx_in_image = 0;
-
             mesh_file_info_ = model_file;
 
             // if(mesh_file_info_.fileName().split(".")[1] == "obj")
@@ -365,29 +363,28 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(
             QVector3D rotation;
             int label_idx = 0;
             int direction_idx = 0;
-            int total_direction_num = pow(3, 3);
+            int total_direction_num = pow(2, 3);
             
             if(mesh_file_info_.fileName().split(".")[1] == "obj")
             {
-                for(int i = 0; i < 3; ++i)
+                for(int i = 0; i < 2; ++i)
                 {
-                    for(int j = 0; j < 3; ++j)
+                    for(int j = 0; j < 2; ++j)
                     {
-                        for(int k = 0; k < 3; ++k)
+                        for(int k = 0; k < 2; ++k)
                         {
                             ++direction_idx;
-                            ++current_label_idx_in_image;
 
-                            rotation = QVector3D(120 * i, 120 * j, 120 * k);
+                            rotation = QVector3D(180 * i, 180 * j, 180 * k);
 
                             QString mesh_file_path = mesh_file_info_.absoluteFilePath();
                             addNormalizedMesh(mesh_file_path, position, rotation, label_idx);
 
                             saveImageAndLabel(
                                 output_dataset_dir,
-                                QString::number(solved_obj_num-1),
+                                QString::number(solved_obj_num-1) + "direction" + QString::number(direction_idx),
                                 model_class_folder_name,
-                                current_label_idx_in_image-1);
+                                0);
 
                             clearMesh();
 
