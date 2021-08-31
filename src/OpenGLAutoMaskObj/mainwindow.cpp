@@ -17,5 +17,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::run_example()
 {
-    opengl_auto_obj_masker_.Create_Dataset();
+    QString source_dataset_path = "/home/chli/3D_FRONT/output/";
+    QString output_dataset_dir = "/home/chli/3D_FRONT/output_mask_dataset/";
+
+    opengl_auto_obj_masker_.Create_Dataset(
+        source_dataset_path,
+        output_dataset_dir);
 }

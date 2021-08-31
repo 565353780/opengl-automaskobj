@@ -73,9 +73,14 @@ public:
         std::vector<std::vector<float>> &project_rect_vec);
 
     bool saveImageAndLabel(
-        const QString &output_name);
+        const QString &output_dataset_dir,
+        const QString &image_basename,
+        const QString &label_name,
+        const size_t current_label_idx_in_image);
 
-    bool Create_Dataset();
+    bool Create_Dataset(
+        const QString &source_dataset_path,
+        const QString &output_dataset_dir);
 
 private:
     void setGLFormat();

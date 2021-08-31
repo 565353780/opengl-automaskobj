@@ -173,11 +173,14 @@ bool OpenGL_Auto_Obj_Masker::getMeshProjectRects(
 }
 
 bool OpenGL_Auto_Obj_Masker::saveImageAndLabel(
-    const QString &output_name)
+    const QString &output_dataset_dir,
+    const QString &image_basename,
+    const QString &label_name,
+    const size_t current_label_idx_in_image)
 {
     //抓取屏幕当前界面并保存
     QPixmap pixmap = w_.grab();
-    pixmap.save(output_name + ".jpg", "jpg");
+    pixmap.save(output_dataset_dir + "shapes/" + image_basename + ".jpg", "jpg");
 
     QImage image = pixmap.toImage();
     QImage mask_image = QImage(image.width(), image.height(), image.format());
@@ -197,7 +200,8 @@ bool OpenGL_Auto_Obj_Masker::saveImageAndLabel(
         }
     }
 
-    mask_image.save(output_name + "_mask" + ".jpg");
+    mask_image.save(output_dataset_dir + "annotations/" +
+        image_basename + "_" + label_name + "_" + QString::number(current_label_idx_in_image) + ".jpg");
 
     return true;
 
@@ -275,7 +279,7 @@ bool OpenGL_Auto_Obj_Masker::saveImageAndLabel(
     QString strJson(byteArray);
 
     //保存json内容
-    std::ofstream outfile(output_name.toStdString() + ".json");
+    std::ofstream outfile((output_dataset_dir + "annotations/" + image_basename + ".json").toStdString());
     outfile << strJson.toStdString();
 
     outfile.close();
@@ -283,18 +287,22 @@ bool OpenGL_Auto_Obj_Masker::saveImageAndLabel(
     return true;
 }
 
-bool OpenGL_Auto_Obj_Masker::Create_Dataset()
+bool OpenGL_Auto_Obj_Masker::Create_Dataset(
+    const QString &source_dataset_path,
+    const QString &output_dataset_dir)
 {
-    qDebug() << "start create dataset !";
-
     initEnv();
 
-    QString source_dataset_path = "/home/chli/3D_FRONT/output/";
-    QDir output_dataset_dir("/home/chli/3D_FRONT/output_mask_dataset");
-    if(!output_dataset_dir.exists())
+    QDir output_dataset_dir_(output_dataset_dir);
+    if(output_dataset_dir_.exists())
     {
-        output_dataset_dir.mkpath(output_dataset_dir.absolutePath());
+        output_dataset_dir_.removeRecursively();
     }
+    output_dataset_dir_.mkpath(output_dataset_dir_.absolutePath());
+
+    output_dataset_dir_.mkdir(output_dataset_dir + "annotations/");
+
+    output_dataset_dir_.mkdir(output_dataset_dir + "shapes/");
 
     QDir dir;
     dir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
@@ -303,10 +311,11 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset()
     QStringList model_class_folder_list = dir.entryList();
 
     class_num_ = model_class_folder_list.size();
-    qDebug() << "model class num : " << class_num_;
 
-    int solved_class_num = 0;
-    int solved_obj_num = 0;
+    size_t solved_class_num = 0;
+    size_t solved_obj_num = 0;
+
+    size_t current_image_idx = 0;
 
     for(QString model_class_folder_name : model_class_folder_list)
     {
@@ -315,14 +324,6 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset()
 
         QString model_class_folder_path = source_dataset_path + model_class_folder_name;
 
-        QString output_folder_path = output_dataset_dir.absolutePath() + "/" +
-          model_class_folder_name + "/";
-
-        if(!dir.exists(output_folder_path))
-        {
-            dir.mkdir(output_folder_path);
-        }
-
         QFileInfoList model_file_list = GetFileList(model_class_folder_path);
 
         std::vector<EasyMesh *> easymesh_list;
@@ -330,38 +331,75 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset()
         for(QFileInfo model_file : model_file_list)
         {
             ++solved_obj_num;
+            ++current_image_idx;
+
+            size_t current_label_idx_in_image = 0;
+
             mesh_file_info_ = model_file;
-            if(mesh_file_info_.fileName().split(".")[1] == "obj")
-            {
-                //qrand()
-                QVector3D position = QVector3D(0, 0, 2);
-                QVector3D rotation = QVector3D(0, 0, 0);
-                int label_idx = 0;
 
-                QString mesh_file_path = mesh_file_info_.absoluteFilePath();
-                addNormalizedMesh(mesh_file_path, position, rotation, label_idx);
-
+            // if(mesh_file_info_.fileName().split(".")[1] == "obj")
+            // {
+                // qrand()
+                // QVector3D position = QVector3D(0, 0, 2);
+                // QVector3D rotation = QVector3D(0, 0, 0);
+                // int label_idx = 0;
+//
+                // QString mesh_file_path = mesh_file_info_.absoluteFilePath();
+                // addNormalizedMesh(mesh_file_path, position, rotation, label_idx);
+//
                 // EasyMesh2D mesh_2d;
                 // getProjectMesh2D(mesh_list_.back(), mesh_2d);
-
+//
                 // std::vector<EasyMesh2D> mesh_2d_vec;
                 // splitMesh2D(mesh_2d, mesh_2d_vec);
-
+//
                 // std::vector<EasyPolygon2D> polygon_vec;
                 // getPolygonVec(mesh_2d_vec, polygon_vec);
+//
+                // qDebug() << "Solving at : " <<
+                  // "Class : " << solved_class_num << "/" << class_num_ <<
+                  // " Model : " << solved_obj_num << " / " << model_file_list.size();
+            // }
 
-                qDebug() << "Solving at : " <<
-                  "Class : " << solved_class_num << "/" << class_num_ <<
-                  " Model : " << solved_obj_num << " / " << model_file_list.size();
-            }
-
+            QVector3D position = QVector3D(0, 0, 2);
+            QVector3D rotation;
+            int label_idx = 0;
+            int direction_idx = 0;
+            int total_direction_num = pow(3, 3);
             
+            if(mesh_file_info_.fileName().split(".")[1] == "obj")
+            {
+                for(int i = 0; i < 3; ++i)
+                {
+                    for(int j = 0; j < 3; ++j)
+                    {
+                        for(int k = 0; k < 3; ++k)
+                        {
+                            ++direction_idx;
+                            ++current_label_idx_in_image;
 
-            QString output_file_path = output_folder_path + QString::number(solved_obj_num);
+                            rotation = QVector3D(120 * i, 120 * j, 120 * k);
 
-            saveImageAndLabel(output_file_path);
+                            QString mesh_file_path = mesh_file_info_.absoluteFilePath();
+                            addNormalizedMesh(mesh_file_path, position, rotation, label_idx);
 
-            clearMesh();
+                            saveImageAndLabel(
+                                output_dataset_dir,
+                                QString::number(solved_obj_num-1),
+                                model_class_folder_name,
+                                current_label_idx_in_image-1);
+
+                            clearMesh();
+
+                            qDebug() << "Solving at : " <<
+                              "Class : " << solved_class_num << "/" << class_num_ <<
+                              " Model : " << solved_obj_num << " / " << model_file_list.size() <<
+                              " Direction : " << direction_idx << " / " << total_direction_num;
+
+                        }
+                    }
+                }
+            }
 
             // if(solved_obj_num > 4)
             // {
