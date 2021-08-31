@@ -179,6 +179,29 @@ bool OpenGL_Auto_Obj_Masker::saveImageAndLabel(
     QPixmap pixmap = w_.grab();
     pixmap.save(output_name + ".jpg", "jpg");
 
+    QImage image = pixmap.toImage();
+    QImage mask_image = QImage(image.width(), image.height(), image.format());
+
+    QRgb *line;
+
+    for(int y = 0; y < image.height(); ++y)
+    {
+        line = (QRgb*)image.scanLine(y);
+
+        for(int x = 0; x < image.width(); ++x)
+        {
+            if(qRed(line[x]) + qGreen(line[x]) + qBlue(line[x]) > 30)
+            {
+                mask_image.setPixel(x, y, qRgb(255, 255, 255));
+            }
+        }
+    }
+
+    mask_image.save(output_name + "_mask" + ".jpg");
+
+    return true;
+
+
     std::vector<std::vector<float>> project_rect_vec;
 
     getMeshProjectRects(project_rect_vec);
@@ -288,7 +311,17 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset()
     for(QString model_class_folder_name : model_class_folder_list)
     {
         ++solved_class_num;
+        solved_obj_num = 0;
+
         QString model_class_folder_path = source_dataset_path + model_class_folder_name;
+
+        QString output_folder_path = output_dataset_dir.absolutePath() + "/" +
+          model_class_folder_name + "/";
+
+        if(!dir.exists(output_folder_path))
+        {
+            dir.mkdir(output_folder_path);
+        }
 
         QFileInfoList model_file_list = GetFileList(model_class_folder_path);
 
@@ -308,32 +341,32 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset()
                 QString mesh_file_path = mesh_file_info_.absoluteFilePath();
                 addNormalizedMesh(mesh_file_path, position, rotation, label_idx);
 
-                EasyMesh2D mesh_2d;
-                getProjectMesh2D(mesh_list_.back(), mesh_2d);
+                // EasyMesh2D mesh_2d;
+                // getProjectMesh2D(mesh_list_.back(), mesh_2d);
 
-                std::vector<EasyMesh2D> mesh_2d_vec;
+                // std::vector<EasyMesh2D> mesh_2d_vec;
+                // splitMesh2D(mesh_2d, mesh_2d_vec);
 
-                splitMesh2D(mesh_2d, mesh_2d_vec);
-
-                std::vector<EasyPolygon2D> polygon_vec;
-
-                getPolygonVec(mesh_2d_vec, polygon_vec);
+                // std::vector<EasyPolygon2D> polygon_vec;
+                // getPolygonVec(mesh_2d_vec, polygon_vec);
 
                 qDebug() << "Solving at : " <<
                   "Class : " << solved_class_num << "/" << class_num_ <<
                   " Model : " << solved_obj_num << " / " << model_file_list.size();
             }
 
-            QString output_file_path = output_dataset_dir.absolutePath() + "/" + QString::number(solved_obj_num);
+            
+
+            QString output_file_path = output_folder_path + QString::number(solved_obj_num);
 
             saveImageAndLabel(output_file_path);
 
             clearMesh();
 
-            if(solved_obj_num > 4)
-            {
-                exit(0);
-            }
+            // if(solved_obj_num > 4)
+            // {
+            //     exit(0);
+            // }
         }
     }
 
