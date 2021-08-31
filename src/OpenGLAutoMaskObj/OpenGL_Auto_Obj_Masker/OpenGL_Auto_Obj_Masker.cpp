@@ -650,36 +650,60 @@ bool OpenGL_Auto_Obj_Masker::getPolygonVec(
     }
 
     std::vector<EasyPolygon2D> current_polygon_vec;
-    std::vector<EasyPolygon2D> union_polygon_vec;
-
     current_polygon_vec.emplace_back(current_polygon);
 
     std::vector<bool> mesh_2d_face_connected_vec;
     mesh_2d_face_connected_vec.resize(mesh_2d.face_2d_list.size(), false);
+    mesh_2d_face_connected_vec[0] = true;
 
-    for(size_t i = 1; i < mesh_2d.face_2d_list.size(); ++i)
+    std::vector<size_t> current_search_face_idx_vec;
+    current_search_face_idx_vec.emplace_back(0);
+
+    bool face_neighboor_all_connected = false;
+
+    std::vector<EasyPolygon2D> union_polygon_vec;
+
+    while(!face_neighboor_all_connected)
     {
-        const std::vector<int> &face_vertex_idx_vec = mesh_2d.face_2d_list[i].vertex_idx_vec;
+        face_neighboor_all_connected = true;
 
-        EasyPolygon2D new_polygon;
+        std::vector<size_t> new_search_face_idx_vec;
 
-        for(const int face_vertex_idx : face_vertex_idx_vec)
+        for(const size_t search_face_idx : current_search_face_idx_vec)
         {
-            EasyPoint2D face_vertex_point;
-            face_vertex_point.setPosition(
-                mesh_2d.vertex_2d_list[face_vertex_idx].x,
-                mesh_2d.vertex_2d_list[face_vertex_idx].y);
-            new_polygon.addPoint(face_vertex_point);
+            for(const size_t search_face_neighboor_face_idx :
+                mesh_2d.face_2d_list[search_face_idx].neighboor_face_idx_vec)
+            {
+                if(!mesh_2d_face_connected_vec[search_face_neighboor_face_idx])
+                {
+                    face_neighboor_all_connected = false;
+                    new_search_face_idx_vec.emplace_back(search_face_neighboor_face_idx);
+
+                    EasyPolygon2D new_polygon;
+                    for(const int search_face_neighboor_face_vertex_idx :
+                        mesh_2d.face_2d_list[search_face_neighboor_face_idx].vertex_idx_vec)
+                    {
+                        EasyPoint2D face_vertex_point;
+                        face_vertex_point.setPosition(
+                            mesh_2d.vertex_2d_list[search_face_neighboor_face_vertex_idx].x,
+                            mesh_2d.vertex_2d_list[search_face_neighboor_face_vertex_idx].y);
+                        new_polygon.addPoint(face_vertex_point);
+                    }
+
+                    new_polygon.setAntiClockWise();
+                    current_polygon_vec.emplace_back(new_polygon);
+
+                    mask.getUnionPolygonVec(current_polygon_vec, union_polygon_vec);
+                    current_polygon_vec = union_polygon_vec;
+                }
+            }
         }
 
-        new_polygon.setAntiClockWise();
-
-        std::vector<EasyPolygon2D> polygon_vec;
-        polygon_vec.emplace_back(current_polygon);
-        polygon_vec.emplace_back(new_polygon);
-
-        mask.getUnionPolygonVec(polygon_vec, union_polygon_vec);
+        current_search_face_idx_vec = new_search_face_idx_vec;
     }
+
+    std::cout << "=================================" << std::endl;
+    std::cout << current_polygon_vec.size() << std::endl;
 
     return true;
 }

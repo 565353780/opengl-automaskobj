@@ -135,7 +135,6 @@ bool EasyMask2D::getUnionPolygonVec(
                 }
             }
         }
-        
 
         int start_point_idx = current_start_point_idx;
 
@@ -1276,6 +1275,49 @@ bool EasyMask2D::getUnionPolygonPoints(
     if(connected_polygon_point_num_ == connected_polygon_point_num)
     {
         std::cout << "force quit" << std::endl;
+
+        if(true)
+        {
+            std::cout << "+++++++++++++++" << std::endl;
+            for(size_t i = 0; i < polygon_vec.size(); ++i)
+            {
+                const EasyPolygon2D &split_polygon = polygon_vec[i];
+                std::cout << "current polygon " << i << " :" << std::endl <<
+                  "points :" << std::endl;
+                for(int j = 0; j < split_polygon.point_list.size(); ++j)
+                {
+                    std::cout << "\t" << j << " : [" <<
+                      split_polygon.point_list[j].x << "," <<
+                      split_polygon.point_list[j].y << "]" << std::endl;
+                }
+            }
+            std::cout << "current intersection:" << std::endl;
+            for(int i = 0; i < intersection_vec.size(); ++i)
+            {
+                std::cout << "points :" << std::endl;
+                std::cout << "\t" << i << " : [" <<
+                  intersection_vec[i].point.x << "," <<
+                  intersection_vec[i].point.y << "]" << std::endl;
+                std::cout << "idx :" << std::endl;
+                for(int j = 0;
+                    j < intersection_vec[i].polygon_point_idx_vec_pair_vec.size();
+                    ++j)
+                {
+                    const auto &polygon_line_idx_vec_pair =
+                      intersection_vec[i].polygon_point_idx_vec_pair_vec[j];
+                    std::cout << "\tpolygon id : " <<
+                      polygon_line_idx_vec_pair.first << std::endl;
+                    std::cout << "\tpolygon line idx :";
+                    for(int k = 0; k < polygon_line_idx_vec_pair.second.size(); ++k)
+                    {
+                        std::cout << polygon_line_idx_vec_pair.second[k] << " , ";
+                    }
+                    std::cout << std::endl;
+                }
+            }
+            std::cout << "+++++++++++++++" << std::endl;
+        }
+
         exit(0);
     }
     connected_polygon_point_num_ = connected_polygon_point_num;
