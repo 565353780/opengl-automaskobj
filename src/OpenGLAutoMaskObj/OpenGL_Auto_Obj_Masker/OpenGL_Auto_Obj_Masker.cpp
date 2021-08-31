@@ -176,11 +176,12 @@ bool OpenGL_Auto_Obj_Masker::saveImageAndLabel(
     const QString &output_dataset_dir,
     const QString &image_basename,
     const QString &label_name,
-    const size_t current_label_idx_in_image)
+    const size_t &current_label_idx_in_image,
+    const QString &data_type)
 {
     //抓取屏幕当前界面并保存
     QPixmap pixmap = w_.grab();
-    pixmap.save(output_dataset_dir + "shapes/" + image_basename + ".jpg", "jpg");
+    pixmap.save(output_dataset_dir + data_type + "/images/" + image_basename + ".jpg", "jpg");
 
     QImage image = pixmap.toImage();
     QImage mask_image = QImage(image.width(), image.height(), image.format());
@@ -200,7 +201,7 @@ bool OpenGL_Auto_Obj_Masker::saveImageAndLabel(
         }
     }
 
-    mask_image.save(output_dataset_dir + "annotations/" +
+    mask_image.save(output_dataset_dir + data_type + "/annotations/" +
         image_basename + "_" + label_name + "_" + QString::number(current_label_idx_in_image) + ".jpg");
 
     return true;
@@ -300,9 +301,15 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(
     }
     output_dataset_dir_.mkpath(output_dataset_dir_.absolutePath());
 
-    output_dataset_dir_.mkdir(output_dataset_dir + "annotations/");
-
-    output_dataset_dir_.mkdir(output_dataset_dir + "shapes/");
+    output_dataset_dir_.mkdir(output_dataset_dir + "train/");
+    output_dataset_dir_.mkdir(output_dataset_dir + "test/");
+    output_dataset_dir_.mkdir(output_dataset_dir + "val/");
+    output_dataset_dir_.mkdir(output_dataset_dir + "train/annotations/");
+    output_dataset_dir_.mkdir(output_dataset_dir + "train/images/");
+    output_dataset_dir_.mkdir(output_dataset_dir + "test/annotations/");
+    output_dataset_dir_.mkdir(output_dataset_dir + "test/images/");
+    output_dataset_dir_.mkdir(output_dataset_dir + "val/annotations/");
+    output_dataset_dir_.mkdir(output_dataset_dir + "val/images/");
 
     QDir dir;
     dir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
@@ -380,11 +387,21 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(
                             QString mesh_file_path = mesh_file_info_.absoluteFilePath();
                             addNormalizedMesh(mesh_file_path, position, rotation, label_idx);
 
+                            QString data_type = "train";
+                            if(direction_idx > 6)
+                            {
+                                data_type = "val";
+                            }
+                            else if(direction_idx > 5)
+                            {
+                                data_type = "test";
+                            }
                             saveImageAndLabel(
                                 output_dataset_dir,
                                 QString::number(solved_obj_num-1) + "direction" + QString::number(direction_idx),
                                 model_class_folder_name,
-                                0);
+                                0,
+                                data_type);
 
                             clearMesh();
 

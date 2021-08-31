@@ -72,11 +72,13 @@ public:
     bool getMeshProjectRects(
         std::vector<std::vector<float>> &project_rect_vec);
 
+    //data_type : 0->train, 1->test, 2->val
     bool saveImageAndLabel(
         const QString &output_dataset_dir,
         const QString &image_basename,
         const QString &label_name,
-        const size_t current_label_idx_in_image);
+        const size_t &current_label_idx_in_image,
+        const QString &data_type);
 
     bool Create_Dataset(
         const QString &source_dataset_path,
