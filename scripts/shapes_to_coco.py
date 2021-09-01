@@ -8,6 +8,8 @@ import fnmatch
 from PIL import Image
 import numpy as np
 from pycococreatortools import pycococreatortools
+from multiprocessing import Pool, cpu_count
+from tqdm import tqdm
 
 class ShapesToCOCO:
     def __init__(self):
@@ -16,6 +18,8 @@ class ShapesToCOCO:
 
     def reset(self):
         self.dataset_root_dir = None
+        self.image_dir = None
+        self.annotation_dir = None
         self.data_type_list = []
         self.info = {
             "description": "Example Dataset",
@@ -30,7 +34,27 @@ class ShapesToCOCO:
             "url": "http://creativecommons.org/licenses/by-nc-sa/2.0/"}]
         self.classes = []
         self.categories = []
+        self.coco_output = None
+        # [[image_id, image_file_path, image_size], ...]
+        self.image_info_list = []
+        # [[image_id, image_file_path, image_size, annotation_id, annotation_file_path], ...]
+        self.annotation_info_list = []
         return
+
+    def poolTask(self, function, task_list, thread_num):
+        result_list = []
+
+        pool = Pool(thread_num)
+
+        with tqdm(total=len(task_list)) as t:
+            for result in pool.imap(function, task_list):
+                if result is not None:
+                    result_list.append(result)
+                t.update()
+
+        pool.close()
+        pool.join()
+        return result_list
 
     def setDatasetRootDir(self, dataset_root_dir):
         self.dataset_root_dir = dataset_root_dir
@@ -38,7 +62,7 @@ class ShapesToCOCO:
             self.dataset_root_dir += "/"
         return
 
-    def setDataType(self, data_type_list):
+    def setDataTypes(self, data_type_list):
         self.data_type_list = data_type_list
         return
 
@@ -53,29 +77,81 @@ class ShapesToCOCO:
         self.createCategories()
         return
 
-    def filter_for_jpeg(self, root, files):
-        file_types = ['*.jpg']
-        file_types = r'|'.join([fnmatch.translate(x) for x in file_types])
-        files = [os.path.join(root, f) for f in files]
-        files = [f for f in files if re.match(file_types, f)]
+    def getImageAndSegmentationIDList(self):
+        self.image_info_list = []
+        self.annotation_info_list = []
+
+        image_file_name_list = os.listdir(self.image_dir)
+        annotation_file_name_list = os.listdir(self.annotation_dir)
+
+        for i in range(len(image_file_name_list)):
+            image_file_name = image_file_name_list[i]
+            image_file_path = self.image_dir + image_file_name
+
+            image = Image.open(image_file_path)
+            image_size = image.size
+
+            self.image_info_list.append([i + 1, image_file_path, image_size])
+
+        for i in range(len(annotation_file_name_list)):
+            annotation_file_name = annotation_file_name_list[i]
+            annotation_image_basename = annotation_file_name.split("_")[0]
+            annotation_id = i + 1
+            annotation_file_path = self.annotation_dir + annotation_file_name
+
+            for image_info in self.image_info_list:
+                image_file_path = image_info[1]
+                image_basename = os.path.basename(image_file_path).split(".")[0]
+                if image_basename == annotation_image_basename:
+                    image_id = image_info[0]
+                    image_size = image_info[2]
+                    self.annotation_info_list.append(
+                        [image_id, image_file_path, image_size, annotation_id, annotation_file_path])
+                    break
+
+            print("\rPrepare annotation info list : " +
+                  str(i) + "/" + str(len(annotation_file_name_list)) + "    ", end="")
+        print()
+        return
+
+    def createImageInfoJson(self, image_info):
+        image_id = image_info[0]
+        image_file_path = image_info[1]
+        image_size = image_info[2]
+        image_basename = os.path.basename(image_file_path)
+
+        image_info = pycococreatortools.create_image_info(
+            image_id, image_basename, image_size)
+
+        #  self.coco_output["images"].append(image_info)
+        return image_info
+
+    def createAnnotationInfoJson(self, annotation_info):
+        image_id = annotation_info[0]
+        image_file_path = annotation_info[1]
+        image_size = annotation_info[2]
+        annotation_id = annotation_info[3]
+        annotation_file_path = annotation_info[4]
+
+        class_id = [x['id'] for x in self.categories if x['name'] in annotation_file_path][0]
+
+        category_info = {'id': class_id, 'is_crowd': 'crowd' in image_file_path}
+
+        binary_mask = np.asarray(Image.open(annotation_file_path)
+            .convert('1')).astype(np.uint8)
         
-        return files
+        annotation_info = pycococreatortools.create_annotation_info(
+            annotation_id, image_id, category_info, binary_mask,
+            image_size, tolerance=2)
 
-    def filter_for_annotations(self, root, files, image_filename):
-        file_types = ['*.jpg']
-        file_types = r'|'.join([fnmatch.translate(x) for x in file_types])
-        basename_no_extension = os.path.splitext(os.path.basename(image_filename))[0]
-        file_name_prefix = basename_no_extension + '.*'
-        files = [os.path.join(root, f) for f in files]
-        files = [f for f in files if re.match(file_types, f)]
-        files = [f for f in files if re.match(file_name_prefix, os.path.splitext(os.path.basename(f))[0])]
+        #  if annotation_info is not None:
+        #      self.coco_output["annotations"].append(annotation_info)
+        return annotation_info
 
-        return files
-
-    def createCOCOJson(self):
+    def createCOCOJson(self, thread_num):
 
         for data_type in data_type_list:
-            coco_output = {
+            self.coco_output = {
                 "info": self.info,
                 "licenses": self.licenses,
                 "categories": self.categories,
@@ -83,66 +159,35 @@ class ShapesToCOCO:
                 "annotations": []
             }
 
-            image_id = 1
-            segmentation_id = 1
+            self.image_dir = self.dataset_root_dir + data_type + "/images/"
+            self.annotation_dir = self.dataset_root_dir + data_type + "/annotations/"
 
-            image_dir = self.dataset_root_dir + data_type + "/images/"
-            annotation_dir = self.dataset_root_dir + data_type + "/annotations/"
+            print("Start createCOCOJson for " + data_type + " dataset...")
+            print("Start prepare annotation info list...")
 
-            
-            # filter for jpeg images
-            for root, _, files in os.walk(image_dir):
-                image_files = self.filter_for_jpeg(root, files)
+            self.getImageAndSegmentationIDList()
 
-                solved_image_num = 0
+            print("Finish prepare annotation info list!")
+            print("Start create image info json with " + str(thread_num) + "threads...")
 
-                # go through each image
-                for image_filename in image_files:
-                    solved_image_num += 1
+            image_info_list = \
+                self.poolTask(self.createImageInfoJson, self.image_info_list, thread_num)
 
-                    image = Image.open(image_filename)
+            self.coco_output["images"] = image_info_list
 
-                    image_info = pycococreatortools.create_image_info(
-                        image_id, os.path.basename(image_filename), image.size)
+            print("Finish create image info json!")
+            print("Start create annotation info json with " + str(thread_num) + "threads...")
 
-                    coco_output["images"].append(image_info)
+            annotation_info_list = \
+                self.poolTask(self.createAnnotationInfoJson, self.annotation_info_list, thread_num)
 
-                    # filter for associated png annotations
-                    for root, _, files in os.walk(annotation_dir):
-                        annotation_files = self.filter_for_annotations(root, files, image_filename)
+            self.coco_output["annotations"] = annotation_info_list
 
-                        solved_annotation_num = 0
+            print("Finish create annotation info json!")
 
-                        # go through each associated annotation
-                        for annotation_filename in annotation_files:
-                            solved_annotation_num += 1
-                            
-                            class_id = [x['id'] for x in self.categories if x['name'] in annotation_filename][0]
-
-                            category_info = {'id': class_id, 'is_crowd': 'crowd' in image_filename}
-
-                            binary_mask = np.asarray(Image.open(annotation_filename)
-                                .convert('1')).astype(np.uint8)
-                            
-                            annotation_info = pycococreatortools.create_annotation_info(
-                                segmentation_id, image_id, category_info, binary_mask,
-                                image.size, tolerance=2)
-
-                            if annotation_info is not None:
-                                coco_output["annotations"].append(annotation_info)
-
-                            segmentation_id = segmentation_id + 1
-
-                            print("\rSolving at : Data type : " + data_type +
-                                  " Image : " + str(solved_image_num) + "/" + str(len(image_files)) +
-                                  " Annotation : " + str(solved_annotation_num) + "/" + str(len(annotation_files)) +
-                                  "    ", end="")
-
-                    image_id += 1
-            print()
-
-            with open(self.dataset_root_dir + data_type + '/instances_shape_' + data_type + '.json', 'w') as output_json_file:
-                json.dump(coco_output, output_json_file)
+            with open(self.dataset_root_dir + data_type + '/test_instances_shape_' + data_type + '.json', 'w') as output_json_file:
+                json.dump(self.coco_output, output_json_file)
+            print("Finish createCOCOJson for " + data_type + " dataset!")
 
 
 if __name__ == "__main__":
@@ -153,12 +198,13 @@ if __name__ == "__main__":
                'plants', 'recreation', 'shelf', 'sofa', 'stair',
                'storage unit', 'table', 'wardrobe']
     data_type_list = ['train', 'test', 'val']
+    thread_num = cpu_count()
 
     shapes_to_coco = ShapesToCOCO()
 
     shapes_to_coco.setDatasetRootDir(dataset_root_dir)
     shapes_to_coco.setClasses(classes)
-    shapes_to_coco.setDataType(data_type_list)
+    shapes_to_coco.setDataTypes(data_type_list)
 
-    shapes_to_coco.createCOCOJson()
+    shapes_to_coco.createCOCOJson(thread_num)
 
