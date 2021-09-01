@@ -405,7 +405,7 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(
                       " Image idx : " << current_image_idx <<
                       " Class : " << solved_class_num << "/" << model_class_folder_list.size() <<
                       " Model : " << solved_obj_num << " / " << model_file_list.size() <<
-                      " Direction : " << i << " / " << direction_vec.size();
+                      " Direction : " << i+1 << " / " << direction_vec.size();
                       ;
 
                 }
