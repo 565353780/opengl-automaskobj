@@ -14,33 +14,6 @@
 
 //    return QApplication::exec();
 
-bool OpenGL_Auto_Obj_Masker::initEnv()
-{
-    //配置OpenGL
-    setGLFormat();
-
-    //显示
-    w_.show();
-
-    //创建虚拟场景
-    scene_ = w_.getScene();
-
-    //创建Cube材质和纹理
-    material_ = new QMaterial(scene_);
-    material_->linkShaders(":/shaders/simple_vshader.glsl",":/shaders/simple_fshader.glsl");
-
-    //初始化相机位姿矩阵
-    QMatrix4x4 matrix;
-    matrix.lookAt(QVector3D(0,0,0),QVector3D(0,0,1),QVector3D(0,1,0));
-    scene_->setDefaultModelMatrix(matrix);
-    scene_->setDefaultView();
-
-    //获取viewport参数
-    glGetIntegerv(GL_VIEWPORT, viewport_);
-
-    return true;
-}
-
 bool OpenGL_Auto_Obj_Masker::addNormalizedMesh(
     const QString &mesh_file_path,
     const QVector3D &center,
@@ -290,9 +263,11 @@ bool OpenGL_Auto_Obj_Masker::saveImageAndLabel(
 
 bool OpenGL_Auto_Obj_Masker::Create_Dataset(
     const QString &source_dataset_path,
-    const QString &output_dataset_dir)
+    const QString &output_dataset_dir,
+    const size_t &data_width,
+    const size_t &data_height)
 {
-    initEnv();
+    initEnv(data_width, data_height);
 
     QDir output_dataset_dir_(output_dataset_dir);
     if(output_dataset_dir_.exists())
@@ -317,7 +292,36 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(
 
     QStringList model_class_folder_list = dir.entryList();
 
-    class_num_ = model_class_folder_list.size();
+    std::vector<QVector3D> direction_vec;
+    QVector3D new_direction;
+
+    new_direction[0] = 0;
+    new_direction[1] = 0;
+    new_direction[2] = 0;
+    direction_vec.emplace_back(new_direction);
+    new_direction[0] = 90;
+    new_direction[1] = 0;
+    new_direction[2] = 0;
+    direction_vec.emplace_back(new_direction);
+    new_direction[0] = 180;
+    new_direction[1] = 0;
+    new_direction[2] = 0;
+    direction_vec.emplace_back(new_direction);
+    new_direction[0] = 270;
+    new_direction[1] = 0;
+    new_direction[2] = 0;
+    direction_vec.emplace_back(new_direction);
+    new_direction[0] = 0;
+    new_direction[1] = 90;
+    new_direction[2] = 0;
+    direction_vec.emplace_back(new_direction);
+    new_direction[0] = 0;
+    new_direction[1] = 270;
+    new_direction[2] = 0;
+    direction_vec.emplace_back(new_direction);
+
+    size_t min_test_direction_idx = 0.8 * direction_vec.size();
+    size_t min_val_direction_idx = 0.9 * direction_vec.size();
 
     size_t solved_class_num = 0;
     size_t solved_obj_num = 0;
@@ -362,56 +366,47 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(
                 // getPolygonVec(mesh_2d_vec, polygon_vec);
 //
                 // qDebug() << "Solving at : " <<
-                  // "Class : " << solved_class_num << "/" << class_num_ <<
+                  // "Class : " << solved_class_num << "/" << model_class_folder_list.size() <<
                   // " Model : " << solved_obj_num << " / " << model_file_list.size();
             // }
 
             QVector3D position = QVector3D(0, 0, 2);
             QVector3D rotation;
             int label_idx = 0;
-            int direction_idx = 0;
-            int total_direction_num = pow(2, 3);
             
             if(mesh_file_info_.fileName().split(".")[1] == "obj")
             {
-                for(int i = 0; i < 2; ++i)
+                for(size_t i = 0; i < direction_vec.size(); ++i)
                 {
-                    for(int j = 0; j < 2; ++j)
+                    rotation = direction_vec[i];
+
+                    QString mesh_file_path = mesh_file_info_.absoluteFilePath();
+                    addNormalizedMesh(mesh_file_path, position, rotation, label_idx);
+
+                    QString data_type = "train";
+                    if(i >= min_val_direction_idx)
                     {
-                        for(int k = 0; k < 2; ++k)
-                        {
-                            ++direction_idx;
-
-                            rotation = QVector3D(180 * i, 180 * j, 180 * k);
-
-                            QString mesh_file_path = mesh_file_info_.absoluteFilePath();
-                            addNormalizedMesh(mesh_file_path, position, rotation, label_idx);
-
-                            QString data_type = "train";
-                            if(direction_idx > 6)
-                            {
-                                data_type = "val";
-                            }
-                            else if(direction_idx > 5)
-                            {
-                                data_type = "test";
-                            }
-                            saveImageAndLabel(
-                                output_dataset_dir,
-                                QString::number(solved_obj_num-1) + "direction" + QString::number(direction_idx),
-                                model_class_folder_name,
-                                0,
-                                data_type);
-
-                            clearMesh();
-
-                            qDebug() << "Solving at : " <<
-                              "Class : " << solved_class_num << "/" << class_num_ <<
-                              " Model : " << solved_obj_num << " / " << model_file_list.size() <<
-                              " Direction : " << direction_idx << " / " << total_direction_num;
-
-                        }
+                        data_type = "val";
                     }
+                    else if(i >= min_test_direction_idx)
+                    {
+                        data_type = "test";
+                    }
+                    saveImageAndLabel(
+                        output_dataset_dir,
+                        QString::number(solved_obj_num-1) + "direction" + QString::number(i),
+                        model_class_folder_name,
+                        0,
+                        data_type);
+
+                    clearMesh();
+
+                    qDebug() << "Solving at : " <<
+                      "Class : " << solved_class_num << "/" << model_class_folder_list.size() <<
+                      " Model : " << solved_obj_num << " / " << model_file_list.size() <<
+                      " Direction : " << i << " / " << direction_vec.size();
+                      ;
+
                 }
             }
 
@@ -459,6 +454,37 @@ void OpenGL_Auto_Obj_Masker::setGLFormat()
     format.setStencilBufferSize(8);
     format.setSamples(4);
     QSurfaceFormat::setDefaultFormat(format);
+}
+
+bool OpenGL_Auto_Obj_Masker::initEnv(
+    const size_t &data_width,
+    const size_t &data_height)
+{
+    //配置OpenGL
+    setGLFormat();
+
+    w_.setFixedSize(data_width, data_height);
+
+    //显示
+    w_.show();
+
+    //创建虚拟场景
+    scene_ = w_.getScene();
+
+    //创建Cube材质和纹理
+    material_ = new QMaterial(scene_);
+    material_->linkShaders(":/shaders/simple_vshader.glsl",":/shaders/simple_fshader.glsl");
+
+    //初始化相机位姿矩阵
+    QMatrix4x4 matrix;
+    matrix.lookAt(QVector3D(0,0,0),QVector3D(0,0,1),QVector3D(0,1,0));
+    scene_->setDefaultModelMatrix(matrix);
+    scene_->setDefaultView();
+
+    //获取viewport参数
+    glGetIntegerv(GL_VIEWPORT, viewport_);
+
+    return true;
 }
 
 bool OpenGL_Auto_Obj_Masker::normalizeMesh(

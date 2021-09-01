@@ -46,8 +46,6 @@ public:
     }
 
 public:
-    bool initEnv();
-
     bool addNormalizedMesh(
         const QString &mesh_file_path,
         const QVector3D &center,
@@ -72,7 +70,6 @@ public:
     bool getMeshProjectRects(
         std::vector<std::vector<float>> &project_rect_vec);
 
-    //data_type : 0->train, 1->test, 2->val
     bool saveImageAndLabel(
         const QString &output_dataset_dir,
         const QString &image_basename,
@@ -82,10 +79,16 @@ public:
 
     bool Create_Dataset(
         const QString &source_dataset_path,
-        const QString &output_dataset_dir);
+        const QString &output_dataset_dir,
+        const size_t &data_width,
+        const size_t &data_height);
 
 private:
     void setGLFormat();
+
+    bool initEnv(
+        const size_t &data_width,
+        const size_t &data_height);
 
     bool normalizeMesh(
         EasyMesh *mesh);
@@ -141,9 +144,6 @@ private:
 
     static bool cpDir(QString srcPath, QString dstPath);
     static bool delDir(QString dirName);
-
-public:
-    int class_num_;
 
 private:
     QRenderWidget w_;
