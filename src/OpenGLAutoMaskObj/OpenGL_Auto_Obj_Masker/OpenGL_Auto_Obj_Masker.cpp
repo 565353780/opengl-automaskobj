@@ -277,12 +277,9 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(
     output_dataset_dir_.mkpath(output_dataset_dir_.absolutePath());
 
     output_dataset_dir_.mkdir(output_dataset_dir + "train/");
-    output_dataset_dir_.mkdir(output_dataset_dir + "test/");
     output_dataset_dir_.mkdir(output_dataset_dir + "val/");
     output_dataset_dir_.mkdir(output_dataset_dir + "train/annotations/");
     output_dataset_dir_.mkdir(output_dataset_dir + "train/images/");
-    output_dataset_dir_.mkdir(output_dataset_dir + "test/annotations/");
-    output_dataset_dir_.mkdir(output_dataset_dir + "test/images/");
     output_dataset_dir_.mkdir(output_dataset_dir + "val/annotations/");
     output_dataset_dir_.mkdir(output_dataset_dir + "val/images/");
 
@@ -320,7 +317,6 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(
     new_direction[2] = 0;
     direction_vec.emplace_back(new_direction);
 
-    size_t min_test_direction_idx = 0.8 * direction_vec.size();
     size_t min_val_direction_idx = 0.9 * direction_vec.size();
 
     size_t solved_class_num = 0;
@@ -387,10 +383,6 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(
                     if(i >= min_val_direction_idx)
                     {
                         data_type = "val";
-                    }
-                    else if(i >= min_test_direction_idx)
-                    {
-                        data_type = "test";
                     }
                     saveImageAndLabel(
                         output_dataset_dir,
