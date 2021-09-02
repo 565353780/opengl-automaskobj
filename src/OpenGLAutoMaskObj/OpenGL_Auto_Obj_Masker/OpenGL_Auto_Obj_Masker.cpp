@@ -406,15 +406,8 @@ bool OpenGL_Auto_Obj_Masker::Create_Dataset(
                       " Class : " << solved_class_num << "/" << model_class_folder_list.size() <<
                       " Model : " << solved_obj_num << " / " << model_file_list.size() <<
                       " Direction : " << i+1 << " / " << direction_vec.size();
-                      ;
-
                 }
             }
-
-            // if(solved_obj_num > 4)
-            // {
-            //     exit(0);
-            // }
         }
     }
 

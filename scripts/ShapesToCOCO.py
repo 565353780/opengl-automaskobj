@@ -186,12 +186,12 @@ class ShapesToCOCO:
             print("Finish create annotation info json!")
 
             with open(self.dataset_root_dir + data_type + '/test_instances_shape_' + data_type + '.json', 'w') as output_json_file:
-                json.dump(self.coco_output, output_json_file)
+                json.dump(self.coco_output, output_json_file, indent=4)
             print("Finish createCOCOJson for " + data_type + " dataset!")
 
 
 if __name__ == "__main__":
-    dataset_root_dir = '/home/chli/3D_FRONT/output_mask_1920x1080/'
+    dataset_root_dir = '/home/chli/3D_FRONT/output_mask_test/'
     classes = ['accessory', 'appliance', 'art', 'basin', 'bath',
                'bed', 'build element', 'cabinet', 'chair', 'electronics',
                'kitchen cabinet', 'lighting', 'media unit', 'mirror', 'outdoor furniture',
