@@ -14,5 +14,5 @@ pip install "git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonA
 ## Prepare Dataset
 edit shapes_to_coco.py
 ```bash
-python shapes_to_coco.py
+python scripts/ShapesToCOCO.py
 ```
